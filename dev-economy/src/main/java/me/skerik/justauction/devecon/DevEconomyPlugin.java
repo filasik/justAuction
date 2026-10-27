@@ -28,7 +28,13 @@ public final class DevEconomyPlugin extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        Bukkit.getServicesManager().register(Economy.class, economy, this, ServicePriority.Highest);
+        // Marker file plugins/JustAuctionDevEconomy/v2-only: pretend to be a pure VaultUnlocked v2 economy
+        if (getDataFolder().toPath().resolve("v2-only").toFile().exists()) {
+            Bukkit.getServicesManager().register(net.milkbowl.vault2.economy.Economy.class, DevEconomyV2.wrap(economy), this, ServicePriority.Highest);
+            getComponentLogger().warn("DEV economy registered as VaultUnlocked v2 ONLY.");
+        } else {
+            Bukkit.getServicesManager().register(Economy.class, economy, this, ServicePriority.Highest);
+        }
         getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
             event.registrar().register(buildCommand(), "DEV ONLY: fake economy");
             event.registrar().register(buildPermCommand(), "DEV ONLY: grant a permission until the player quits");

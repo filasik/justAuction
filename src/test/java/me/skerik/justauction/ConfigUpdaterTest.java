@@ -72,4 +72,17 @@ class ConfigUpdaterTest {
         assertEquals(0, ConfigUpdater.merge(again, defaults));
         assertEquals(out, again.saveToString());
     }
+
+    @Test
+    void upgradeFromVersion2AddsAuctionBroadcastAndEconomyOptions() throws Exception {
+        YamlConfiguration user = new YamlConfiguration();
+        user.loadFromString("config-version: 2\nlocale: cs\nlisting:\n  duration-hours: 12\n");
+        ConfigUpdater.merge(user, bundled());
+        assertEquals("cs", user.getString("locale"));
+        assertEquals(12, user.getInt("listing.duration-hours"));
+        assertTrue(user.getBoolean("auction.enabled"));
+        assertFalse(user.getBoolean("broadcast.listed", true));
+        assertEquals("auto", user.getString("economy.backend"));
+        assertTrue(user.getBoolean("metrics"));
+    }
 }

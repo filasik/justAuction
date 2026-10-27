@@ -2,6 +2,7 @@
 dependencies {
     compileOnly("io.papermc.paper:paper-api:${rootProject.property("paperApiVersion")}")
     compileOnly("com.github.MilkBowl:VaultAPI:1.7.1")
+    compileOnly("net.milkbowl.vault:VaultUnlockedAPI:${rootProject.property("vaultUnlockedApiVersion")}")
 }
 
 tasks.processResources {
