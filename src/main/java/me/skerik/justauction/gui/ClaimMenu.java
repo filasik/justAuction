@@ -19,8 +19,8 @@ public final class ClaimMenu extends Menu {
     private static final int MAX = 45, BACK = 45, ALL = 49;
 
     private final Claim[] shown = new Claim[MAX];
-    private boolean loading;
-    private boolean working;
+    private volatile boolean loading;
+    private volatile boolean working;
 
     private ClaimMenu(Context ctx, Player player) {
         super(ctx, player, 6, ctx.messages().get("gui.claims.title"));

@@ -18,7 +18,7 @@ public final class MyListingsMenu extends Menu {
     private static final int MAX = 45, BACK = 49;
 
     private final Listing[] shown = new Listing[MAX];
-    private boolean loading;
+    private volatile boolean loading;
 
     private MyListingsMenu(Context ctx, Player player) {
         super(ctx, player, 6, ctx.messages().get("gui.mine.title"));

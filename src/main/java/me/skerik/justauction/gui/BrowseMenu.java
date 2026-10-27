@@ -26,7 +26,7 @@ public final class BrowseMenu extends Menu {
     private final Listing[] shown = new Listing[PER_PAGE];
     private int pages = 1;
     private int claimCount;
-    private boolean loading;
+    private volatile boolean loading;
 
     private BrowseMenu(Context ctx, Player player, int page, Sort sort, @Nullable String search) {
         super(ctx, player, 6, ctx.messages().get("gui.browse.title"));

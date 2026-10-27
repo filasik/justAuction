@@ -10,3 +10,10 @@ dependencies:
       load: BEFORE
       required: true
       join-classpath: true
+    # Register the fake economy before real economy plugins initialise, so they see a provider
+    CMI:
+      load: BEFORE
+      required: false
+    Essentials:
+      load: BEFORE
+      required: false
