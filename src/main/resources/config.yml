@@ -32,6 +32,12 @@ storage:
     user: justauction
     password: change-me
     pool-size: 6
+    # TLS mode of the connection. Leave empty for the driver default.
+    # MySQL 8+ with a self-signed certificate (the default install) fails with
+    # "Cannot use authentication plugin caching_sha2_password with a Self signed certificates":
+    # use "trust" (encrypted, certificate not verified), or "disable" on a trusted local network.
+    # Other values: verify-ca, verify-full (need a proper certificate).
+    ssl-mode: ""
 
 listing:
   # How long a listing stays on sale.

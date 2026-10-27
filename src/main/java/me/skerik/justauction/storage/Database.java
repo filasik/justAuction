@@ -38,7 +38,8 @@ public final class Database implements AutoCloseable {
             }
             case MARIADB -> {
                 hc.setJdbcUrl("jdbc:mariadb://" + config.host() + ":" + config.port() + "/" + config.database()
-                        + "?useUnicode=true&characterEncoding=utf8");
+                        + "?useUnicode=true&characterEncoding=utf8"
+                        + (config.sslMode().isBlank() ? "" : "&sslMode=" + config.sslMode()));
                 hc.setUsername(config.user());
                 hc.setPassword(config.password());
                 hc.setDriverClassName("org.mariadb.jdbc.Driver");

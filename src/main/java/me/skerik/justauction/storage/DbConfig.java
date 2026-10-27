@@ -8,15 +8,15 @@ import org.jspecify.annotations.Nullable;
  */
 public record DbConfig(
         Dialect dialect, @Nullable Path sqliteFile, String host, int port, String database,
-        String user, String password, int poolSize) {
+        String user, String password, int poolSize, String sslMode) {
 
     public enum Dialect { SQLITE, MARIADB }
 
     public static DbConfig sqlite(Path file, int poolSize) {
-        return new DbConfig(Dialect.SQLITE, file, "", 0, "", "", "", poolSize);
+        return new DbConfig(Dialect.SQLITE, file, "", 0, "", "", "", poolSize, "");
     }
 
     public static DbConfig memory() {
-        return new DbConfig(Dialect.SQLITE, null, "", 0, "", "", "", 1);
+        return new DbConfig(Dialect.SQLITE, null, "", 0, "", "", "", 1, "");
     }
 }

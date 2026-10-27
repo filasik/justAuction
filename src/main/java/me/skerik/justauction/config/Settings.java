@@ -18,7 +18,7 @@ public record Settings(
         int claimRetentionDays, int defaultMaxListings, Set<String> blacklistMaterials, boolean blacklistContents,
         long clickCooldownMs, int refreshTicks, boolean sounds,
         String storageType, String sqliteFile, int sqlitePool, String dbHost, int dbPort, String dbName,
-        String dbUser, String dbPassword, int dbPool) {
+        String dbUser, String dbPassword, int dbPool, String dbSslMode) {
 
     public static Settings load(FileConfiguration c, Logger log) {
         long minPrice = price(c, "listing.min-price", "1.00", log);
@@ -57,7 +57,8 @@ public record Settings(
                 mariadb == null ? "justauction" : mariadb.getString("database", "justauction"),
                 mariadb == null ? "justauction" : mariadb.getString("user", "justauction"),
                 mariadb == null ? "" : mariadb.getString("password", ""),
-                Math.max(1, mariadb == null ? 6 : mariadb.getInt("pool-size", 6)));
+                Math.max(1, mariadb == null ? 6 : mariadb.getInt("pool-size", 6)),
+                mariadb == null ? "" : mariadb.getString("ssl-mode", "").trim());
     }
 
     public Blacklist blacklist() {
@@ -66,7 +67,7 @@ public record Settings(
 
     public DbConfig dbConfig(Path dataFolder) {
         if (storageType.equals("mariadb") || storageType.equals("mysql")) {
-            return new DbConfig(DbConfig.Dialect.MARIADB, null, dbHost, dbPort, dbName, dbUser, dbPassword, dbPool);
+            return new DbConfig(DbConfig.Dialect.MARIADB, null, dbHost, dbPort, dbName, dbUser, dbPassword, dbPool, dbSslMode);
         }
         return DbConfig.sqlite(dataFolder.resolve(sqliteFile), sqlitePool);
     }

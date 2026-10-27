@@ -39,6 +39,6 @@ Pevné ceny, přehledné GUI a nákupy, které nemohou zduplikovat předmět ani
 
 Oprávnění: `justauction.use`, `justauction.sell` (všichni), `justauction.admin` (op), `justauction.limit.<n>` (max. počet nabídek), `justauction.bypass.limit`.
 
-Folia zatím není podporována (pro 26.3 neexistuje build). MariaDB zatím není ověřená na živém serveru.
+Folia zatím není podporována (pro 26.3 neexistuje build). MySQL je ověřené (testy i živý server); u MySQL 8+ se samopodepsaným certifikátem nastav `storage.mariadb.ssl-mode: trust`. Samotný MariaDB server zatím ověřený není.
 
 Licence [MIT](LICENSE).

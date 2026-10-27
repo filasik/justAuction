@@ -69,8 +69,11 @@ public final class JustAuctionPlugin extends JavaPlugin implements Listener {
             schemaVersion = version;
             scheduler.runGlobal(this::finishStartup);
         } catch (SQLException | RuntimeException e) {
+            String hint = String.valueOf(e.getMessage()).contains("Self signed")
+                    ? " Hint: set storage.mariadb.ssl-mode to \"trust\" in config.yml (MySQL with a self-signed certificate)."
+                    : "";
             getLogger().log(Level.SEVERE, "Cannot open the database: " + e.getMessage()
-                    + ". Check storage settings in config.yml. JustAuction is disabling itself.", e);
+                    + ". Check storage settings in config.yml." + hint + " JustAuction is disabling itself.", e);
             scheduler.runGlobal(() -> Bukkit.getPluginManager().disablePlugin(this));
         }
     }

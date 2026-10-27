@@ -105,7 +105,7 @@ Reserving is a single guarded database update, so a second buyer is turned away 
 ## Compatibility
 
 - **Folia:** the code schedules through one abstraction, but Folia has no 26.3 build yet, so it is untested and disabled.
-- **MariaDB/MySQL:** implemented with portable SQL; not yet run against a live server. SQLite is the tested default.
+- **MariaDB/MySQL:** tested against MySQL (unit tests and live server runs). MySQL 8+ with its default self-signed certificate needs `storage.mariadb.ssl-mode: trust`. A real MariaDB server is untested; SQLite remains the default.
 
 ## Building
 

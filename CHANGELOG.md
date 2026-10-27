@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.1
+
+- Fix: MySQL 8+ with its default self-signed certificate could not connect (`caching_sha2_password` error). New option `storage.mariadb.ssl-mode` (set `trust` for this case); the log now hints at it
+- Verified against MySQL: all unit tests and the live-server scenarios pass
+
 ## 1.0.0
 
 First release.
