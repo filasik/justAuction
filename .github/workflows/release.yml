@@ -1,0 +1,54 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing tag to publish to Modrinth (e.g. v1.0.0)
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      TAG: ${{ inputs.tag || github.ref_name }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 25
+      - uses: gradle/actions/setup-gradle@v4
+      - run: ./gradlew build
+
+      - name: GitHub release
+        if: github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION="${TAG#v}"
+          awk -v v="$VERSION" '$0=="## "v{f=1;next} /^## /{f=0} f' CHANGELOG.md > notes.md
+          gh release create "$TAG" build/libs/JustAuction-*.jar --title "JustAuction $VERSION" --notes-file notes.md --verify-tag
+
+      - name: Modrinth
+        env:
+          MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
+        run: |
+          VERSION="${TAG#v}"
+          PROJECT=$(sed -n 's/^modrinthId=//p' gradle.properties)
+          GAME=$(sed -n 's/^minecraftVersion=//p' gradle.properties)
+          awk -v v="$VERSION" '$0=="## "v{f=1;next} /^## /{f=0} f' CHANGELOG.md > notes.md
+          JAR=$(ls build/libs/JustAuction-*.jar | head -n1)
+          DATA=$(jq -n --arg v "$VERSION" --arg p "$PROJECT" --arg g "$GAME" --rawfile c notes.md \
+            '{name:("JustAuction "+$v), version_number:$v, changelog:$c, dependencies:[], game_versions:[$g], version_type:"release", loaders:["paper"], featured:true, project_id:$p, file_parts:["file"], primary_file:"file"}')
+          curl --fail-with-body -sS -X POST https://api.modrinth.com/v2/version \
+            -H "Authorization: $MODRINTH_TOKEN" \
+            -H "User-Agent: filasik/justAuction release workflow" \
+            -F "data=$DATA" -F "file=@$JAR"
