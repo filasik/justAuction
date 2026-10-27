@@ -22,3 +22,23 @@
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
 replay_pid*
+.DS_Store
+CLAUDE.md
+
+# Build / IDE / local server
+.gradle/
+build/
+run/
+.idea/
+*.iml
+.DS_Store
+
+# AI tooling (open-source repo: keep these out)
+CLAUDE.md
+.claude/
+
+# The Gradle wrapper jar must be committed
+!gradle/wrapper/gradle-wrapper.jar
+
+# Local-only notes, not committed
+docs/

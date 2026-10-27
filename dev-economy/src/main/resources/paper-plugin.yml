@@ -1,0 +1,12 @@
+name: JustAuctionDevEconomy
+version: '${version}'
+main: me.skerik.justauction.devecon.DevEconomyPlugin
+api-version: '${apiVersion}'
+description: DEV ONLY. In-memory Vault economy for testing JustAuction. Never ship.
+folia-supported: false
+dependencies:
+  server:
+    Vault:
+      load: BEFORE
+      required: true
+      join-classpath: true

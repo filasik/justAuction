@@ -1,0 +1,14 @@
+name: JustAuction
+version: '${version}'
+main: me.skerik.justauction.JustAuctionPlugin
+api-version: '${apiVersion}'
+description: Auction house with a GUI marketplace, economy via Vault.
+authors: [filasik]
+website: https://github.com/filasik/JustAuction
+folia-supported: false
+dependencies:
+  server:
+    Vault:
+      load: BEFORE
+      required: true
+      join-classpath: true
