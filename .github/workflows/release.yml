@@ -51,4 +51,4 @@ jobs:
           curl --fail-with-body -sS -X POST https://api.modrinth.com/v2/version \
             -H "Authorization: $MODRINTH_TOKEN" \
             -H "User-Agent: filasik/justAuction release workflow" \
-            -F "data=$DATA" -F "file=@$JAR"
+            --form-string "data=$DATA" -F "file=@$JAR"
