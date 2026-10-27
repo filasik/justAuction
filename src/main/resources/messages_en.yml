@@ -29,6 +29,12 @@ sell:
   error: '<prefix> <red>The listing could not be saved. Your item and money were returned.'
   sold: '<prefix> <green><buyer> bought <white><amount>x <item></white> for <gold><price></gold>. You received <gold><earned></gold> (fee <fee>).'
 
+  auction-started: '<prefix> <green>Auction #<id> started: <white><amount>x <item></white>, bids from <gold><price></gold>. Buyout: <buyout>. Ends in <white><time></white>. You receive the top bid minus the <percent>% fee.'
+  auctions-disabled: '<prefix> <red>Auctions are switched off on this server.'
+  bad-buyout: '<prefix> <red>The buyout price must be higher than the starting price (and not above <gold><max></gold>).'
+  blocked: '<prefix> <red>Another plugin prevented this listing.'
+  no-buyout: 'none'
+
 buy:
   success: '<prefix> <green>You bought <white><amount>x <item></white> for <gold><price></gold>.'
   to-claim: '<prefix> <yellow>Your inventory is full. The item is waiting for you: <white>/ja claim</white>.'
@@ -43,6 +49,8 @@ cancel:
   success: '<prefix> <green>Listing cancelled: <white><amount>x <item></white> returned to you.'
   to-claim: '<prefix> <yellow>Your inventory is full. The item is waiting in <white>/ja claim</white>.'
   not-active: '<prefix> <red>That listing can no longer be cancelled (sold or already gone).'
+
+  has-bids: '<prefix> <red>This auction already has bids and can no longer be cancelled.'
 
 browse:
   own-listing: '<prefix> <yellow>That is your listing. Manage it with <white>/ja mylistings</white>.'
@@ -97,7 +105,33 @@ gui:
     - '<!italic><gray>Reason: <reason>'
     - ''
     - '<!italic><hint>'
+  bid:
+    title: '<dark_gray>Place a bid'
+  auction-lore:
+    - ''
+    - '<!italic><gray>Auction #<id>  <dark_gray>|  <gray><bids> bid(s)'
+    - '<!italic><gray>Top bid: <gold><bid> <gray>by <white><bidder>'
+    - '<!italic><gray>Next bid: <gold><next>'
+    - '<!italic><gray>Seller: <white><seller>'
+    - '<!italic><gray>Ends in: <white><time>'
+    - ''
+    - '<!italic><hint>'
+  auction-lore-nobid:
+    - ''
+    - '<!italic><gray>Auction #<id>  <dark_gray>|  <gray>no bids yet'
+    - '<!italic><gray>Starting price: <gold><next>'
+    - '<!italic><gray>Seller: <white><seller>'
+    - '<!italic><gray>Ends in: <white><time>'
+    - ''
+    - '<!italic><hint>'
+  auction-lore-buyout:
+    - '<!italic><gray>Buyout: <gold><buyout>'
   hint:
+    bid: '<yellow>Click to bid'
+    own-auction: '<aqua>Your auction'
+    cancel-auction: '<red>Click to cancel (no bids yet)'
+    auction-has-bids: '<gray>Has bids, cannot be cancelled'
+    bid-item: '<gray>Check the item and the bid'
     buy: '<yellow>Click to buy'
     own: '<aqua>Your listing'
     cancel: '<red>Click to cancel and take it back'
@@ -147,3 +181,40 @@ gui:
     collect-all: '<green>Collect all'
     collect-all-lore:
       - '<!italic><gray>Items waiting: <white><count>'
+    place-bid: '<green>Bid <next>'
+    place-bid-lore:
+      - '<!italic><gray>Minimum next bid: <gold><next>'
+      - '<!italic><gray>For a higher bid use <white>/ja bid <id> <amount>'
+    buyout: '<gold>Buy it now for <buyout>'
+    buyout-lore:
+      - '<!italic><gray>Ends the auction immediately'
+
+bid:
+  success: '<prefix> <green>You are the top bidder on <white><amount>x <item></white> with <gold><bid></gold>. Auction #<id> ends in <white><time></white>.'
+  too-low: '<prefix> <red>Your bid is too low. The minimum is <gold><next></gold>.'
+  too-high: '<prefix> <red>The maximum price is <gold><max></gold>.'
+  own-listing: '<prefix> <red>You cannot bid on your own auction.'
+  already-highest: '<prefix> <yellow>You already hold the top bid on this auction.'
+  not-available: '<prefix> <red>That auction is not available (ended, sold or cancelled).'
+  insufficient-funds: '<prefix> <red>You cannot afford <gold><bid></gold>.'
+  payment-failed: '<prefix> <red>The payment failed. You were not charged.'
+  outbid-race: '<prefix> <yellow>Somebody bid at the same moment (or the auction just ended). You were not charged; try again.'
+  no-buyout: '<prefix> <red>This auction has no buyout price.'
+  blocked: '<prefix> <red>Another plugin prevented this bid.'
+  not-an-auction: '<prefix> <red>Listing #<id> is not an auction. Use the auction house GUI to buy it.'
+  usage: '<prefix> <red>Usage: <white>/ja bid <id> <amount></white>'
+  outbid: '<prefix> <yellow>You were outbid on <white><amount>x <item></white> (auction #<id>). Your <gold><old></gold> was refunded. New top bid: <gold><bid></gold>.'
+  new-bid: '<prefix> <green><bidder> bid <gold><bid></gold> on your <white><amount>x <item></white> (auction #<id>).'
+  won: '<prefix> <green>You won <white><amount>x <item></white> for <gold><price></gold>!'
+  won-to-claim: '<prefix> <yellow>Your inventory is full. The item is waiting for you: <white>/ja claim</white>.'
+  sold: '<prefix> <green>Your auction #<id> ended: <buyer> won <white><amount>x <item></white> for <gold><price></gold>. You received <gold><earned></gold> (fee <fee>).'
+  settle-failed: '<prefix> <red>Your auction #<id> could not be paid out, so it was cancelled. The winner was refunded and the item is in <white>/ja claim</white>.'
+  winner-refunded: '<prefix> <yellow>Auction #<id> could not be finished, so your <gold><bid></gold> was refunded.'
+  removed-refund: '<prefix> <yellow>An admin removed auction #<id>. Your bid of <gold><bid></gold> was refunded.'
+
+broadcast:
+  listed: '<prefix> <yellow><player></yellow> is selling <white><amount>x <item></white> for <gold><price></gold>. <aqua>/ah</aqua>'
+  sold: '<prefix> <yellow><buyer></yellow> bought <white><amount>x <item></white> from <yellow><seller></yellow> for <gold><price></gold>.'
+  auction-started: '<prefix> <yellow><player></yellow> started an auction: <white><amount>x <item></white>, bids from <gold><price></gold>. <aqua>/ah</aqua>'
+  auction-bid: '<prefix> <yellow><bidder></yellow> bid <gold><bid></gold> on <white><amount>x <item></white> (auction #<id>).'
+  auction-won: '<prefix> <yellow><winner></yellow> won <white><amount>x <item></white> from <yellow><seller></yellow> for <gold><price></gold>.'

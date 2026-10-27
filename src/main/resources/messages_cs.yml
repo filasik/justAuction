@@ -29,6 +29,12 @@ sell:
   error: '<prefix> <red>Nabídku se nepodařilo uložit. Předmět i peníze ti byly vráceny.'
   sold: '<prefix> <green><buyer> koupil <white><amount>x <item></white> za <gold><price></gold>. Dostal jsi <gold><earned></gold> (poplatek <fee>).'
 
+  auction-started: '<prefix> <green>Aukce č. <id> zahájena: <white><amount>x <item></white>, příhozy od <gold><price></gold>. Okamžitý nákup: <buyout>. Končí za <white><time></white>. Dostaneš nejvyšší příhoz po poplatku <percent> %.'
+  auctions-disabled: '<prefix> <red>Aukce jsou na tomto serveru vypnuté.'
+  bad-buyout: '<prefix> <red>Cena pro okamžitý nákup musí být vyšší než vyvolávací cena (a ne víc než <gold><max></gold>).'
+  blocked: '<prefix> <red>Jiný plugin tuto nabídku zablokoval.'
+  no-buyout: 'není'
+
 buy:
   success: '<prefix> <green>Koupil jsi <white><amount>x <item></white> za <gold><price></gold>.'
   to-claim: '<prefix> <yellow>Máš plný inventář. Předmět na tebe čeká: <white>/ja claim</white>.'
@@ -43,6 +49,8 @@ cancel:
   success: '<prefix> <green>Nabídka zrušena: <white><amount>x <item></white> se ti vrátilo.'
   to-claim: '<prefix> <yellow>Máš plný inventář. Předmět čeká v <white>/ja claim</white>.'
   not-active: '<prefix> <red>Tuto nabídku už nelze zrušit (prodána nebo pryč).'
+
+  has-bids: '<prefix> <red>Tato aukce už má příhozy a nelze ji zrušit.'
 
 browse:
   own-listing: '<prefix> <yellow>To je tvoje nabídka. Spravuj ji přes <white>/ja mylistings</white>.'
@@ -97,7 +105,33 @@ gui:
     - '<!italic><gray>Důvod: <reason>'
     - ''
     - '<!italic><hint>'
+  bid:
+    title: '<dark_gray>Přihodit'
+  auction-lore:
+    - ''
+    - '<!italic><gray>Aukce č. <id>  <dark_gray>|  <gray>příhozů: <bids>'
+    - '<!italic><gray>Nejvyšší příhoz: <gold><bid> <gray>od <white><bidder>'
+    - '<!italic><gray>Další příhoz: <gold><next>'
+    - '<!italic><gray>Prodejce: <white><seller>'
+    - '<!italic><gray>Končí za: <white><time>'
+    - ''
+    - '<!italic><hint>'
+  auction-lore-nobid:
+    - ''
+    - '<!italic><gray>Aukce č. <id>  <dark_gray>|  <gray>zatím bez příhozů'
+    - '<!italic><gray>Vyvolávací cena: <gold><next>'
+    - '<!italic><gray>Prodejce: <white><seller>'
+    - '<!italic><gray>Končí za: <white><time>'
+    - ''
+    - '<!italic><hint>'
+  auction-lore-buyout:
+    - '<!italic><gray>Okamžitý nákup: <gold><buyout>'
   hint:
+    bid: '<yellow>Klikni pro příhoz'
+    own-auction: '<aqua>Tvoje aukce'
+    cancel-auction: '<red>Klikni pro zrušení (zatím bez příhozů)'
+    auction-has-bids: '<gray>Má příhozy, nelze zrušit'
+    bid-item: '<gray>Zkontroluj předmět a příhoz'
     buy: '<yellow>Klikni pro koupi'
     own: '<aqua>Tvoje nabídka'
     cancel: '<red>Klikni pro zrušení a vrácení'
@@ -147,3 +181,40 @@ gui:
     collect-all: '<green>Vyzvednout vše'
     collect-all-lore:
       - '<!italic><gray>Čeká předmětů: <white><count>'
+    place-bid: '<green>Přihodit <next>'
+    place-bid-lore:
+      - '<!italic><gray>Minimální další příhoz: <gold><next>'
+      - '<!italic><gray>Vyšší příhoz: <white>/ja bid <id> <částka>'
+    buyout: '<gold>Koupit hned za <buyout>'
+    buyout-lore:
+      - '<!italic><gray>Aukce okamžitě skončí'
+
+bid:
+  success: '<prefix> <green>Máš nejvyšší příhoz na <white><amount>x <item></white>: <gold><bid></gold>. Aukce č. <id> končí za <white><time></white>.'
+  too-low: '<prefix> <red>Příhoz je příliš nízký. Minimum je <gold><next></gold>.'
+  too-high: '<prefix> <red>Maximální cena je <gold><max></gold>.'
+  own-listing: '<prefix> <red>Na vlastní aukci přihazovat nemůžeš.'
+  already-highest: '<prefix> <yellow>V této aukci už máš nejvyšší příhoz.'
+  not-available: '<prefix> <red>Tato aukce není dostupná (skončila, prodala se nebo byla zrušena).'
+  insufficient-funds: '<prefix> <red>Na <gold><bid></gold> nemáš dost peněz.'
+  payment-failed: '<prefix> <red>Platba selhala. Nic ti nebylo strženo.'
+  outbid-race: '<prefix> <yellow>Někdo přihodil ve stejnou chvíli (nebo aukce právě skončila). Nic ti nebylo strženo; zkus to znovu.'
+  no-buyout: '<prefix> <red>Tato aukce nemá cenu pro okamžitý nákup.'
+  blocked: '<prefix> <red>Jiný plugin tento příhoz zablokoval.'
+  not-an-auction: '<prefix> <red>Nabídka č. <id> není aukce. Kup ji v aukční síni.'
+  usage: '<prefix> <red>Použití: <white>/ja bid <id> <částka></white>'
+  outbid: '<prefix> <yellow>Někdo tě přehodil na <white><amount>x <item></white> (aukce č. <id>). <gold><old></gold> ti bylo vráceno. Nový nejvyšší příhoz: <gold><bid></gold>.'
+  new-bid: '<prefix> <green><bidder> přihodil <gold><bid></gold> na tvůj <white><amount>x <item></white> (aukce č. <id>).'
+  won: '<prefix> <green>Vyhrál jsi <white><amount>x <item></white> za <gold><price></gold>!'
+  won-to-claim: '<prefix> <yellow>Máš plný inventář. Předmět na tebe čeká: <white>/ja claim</white>.'
+  sold: '<prefix> <green>Tvoje aukce č. <id> skončila: <buyer> vyhrál <white><amount>x <item></white> za <gold><price></gold>. Dostal jsi <gold><earned></gold> (poplatek <fee>).'
+  settle-failed: '<prefix> <red>Aukci č. <id> se nepodařilo vyplatit, proto byla zrušena. Vítěz dostal peníze zpět a předmět čeká v <white>/ja claim</white>.'
+  winner-refunded: '<prefix> <yellow>Aukci č. <id> nešlo dokončit, proto ti byl příhoz <gold><bid></gold> vrácen.'
+  removed-refund: '<prefix> <yellow>Admin odstranil aukci č. <id>. Tvůj příhoz <gold><bid></gold> ti byl vrácen.'
+
+broadcast:
+  listed: '<prefix> <yellow><player></yellow> prodává <white><amount>x <item></white> za <gold><price></gold>. <aqua>/ah</aqua>'
+  sold: '<prefix> <yellow><buyer></yellow> koupil <white><amount>x <item></white> od <yellow><seller></yellow> za <gold><price></gold>.'
+  auction-started: '<prefix> <yellow><player></yellow> zahájil aukci: <white><amount>x <item></white>, příhozy od <gold><price></gold>. <aqua>/ah</aqua>'
+  auction-bid: '<prefix> <yellow><bidder></yellow> přihodil <gold><bid></gold> na <white><amount>x <item></white> (aukce č. <id>).'
+  auction-won: '<prefix> <yellow><winner></yellow> vyhrál <white><amount>x <item></white> od <yellow><seller></yellow> za <gold><price></gold>.'

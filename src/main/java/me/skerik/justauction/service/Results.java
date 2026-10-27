@@ -42,7 +42,12 @@ public final class Results {
     /** @param claimId the buyer's claim holding the item (SUCCESS only) */
     public record BuyResult(BuyStatus status, @Nullable Listing listing, long fee, long claimId) {
         public long sellerReceives() {
-            return listing == null ? 0 : listing.price() - fee;
+            return listing == null ? 0 : listing.finalPrice() - fee;
+        }
+
+        /** For auctions the price is the winning bid, not the listing's starting price. */
+        public long sellerReceives(long price) {
+            return price - fee;
         }
     }
 

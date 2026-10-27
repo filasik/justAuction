@@ -37,6 +37,7 @@ public final class Purchases {
                 ctx.log.log(Level.SEVERE, "Purchase of listing " + l.id() + " failed unexpectedly", err);
             } else if (res.status() == me.skerik.justauction.service.Results.BuyStatus.SUCCESS) {
                 notifySeller(ctx, player, l, res);
+                me.skerik.justauction.notify.Broadcaster.sold(ctx, l, player.getName(), l.price());
             }
             ctx.scheduler.runForEntity(player, () -> {
                 if (err != null) {
@@ -71,6 +72,7 @@ public final class Purchases {
             case PAYMENT_FAILED -> fail(ctx, player, "buy.payment-failed", tags);
             case SELLER_PAYMENT_FAILED -> fail(ctx, player, "buy.seller-payment-failed", tags);
             case DELAYED -> fail(ctx, player, "buy.delayed", tags);
+            case BLOCKED -> fail(ctx, player, "bid.blocked", tags);
             case ERROR -> fail(ctx, player, "error.generic", tags);
         }
     }
@@ -111,7 +113,8 @@ public final class Purchases {
         Messages m = ctx.messages();
         TagResolver[] tags = itemTags(ctx, l);
         if (outcome.cancelled() == null) {
-            player.sendMessage(m.get("cancel.not-active", tags));
+            boolean bids = outcome.failure() == me.skerik.justauction.storage.ListingStore.CancelFailure.HAS_BIDS;
+            player.sendMessage(m.get(bids ? "cancel.has-bids" : "cancel.not-active", tags));
             Ui.error(player, ctx.settings().sounds());
             return;
         }

@@ -6,6 +6,8 @@ import java.util.logging.Level;
 import me.skerik.justauction.Context;
 import me.skerik.justauction.config.Messages;
 import me.skerik.justauction.economy.Money;
+import me.skerik.justauction.model.ListingKind;
+import me.skerik.justauction.notify.Broadcaster;
 import me.skerik.justauction.service.AuctionService.SellRequest;
 import me.skerik.justauction.service.Results.SellResult;
 import me.skerik.justauction.util.Inventories;
@@ -26,16 +28,32 @@ public final class SellHandler {
     }
 
     public static void sell(Context ctx, Player player, String priceArg) {
+        start(ctx, player, ListingKind.FIXED, priceArg, null);
+    }
+
+    /** /ja auction: start a timed auction with an optional buyout price. */
+    public static void auction(Context ctx, Player player, String startArg, @org.jspecify.annotations.Nullable String buyoutArg) {
+        start(ctx, player, ListingKind.AUCTION, startArg, buyoutArg);
+    }
+
+    private static void start(Context ctx, Player player, ListingKind kind, String priceArg,
+                              @org.jspecify.annotations.Nullable String buyoutArg) {
         Messages m = ctx.messages();
-        if (!player.hasPermission("justauction.sell")) {
+        if (!player.hasPermission("justauction.sell") || (kind == ListingKind.AUCTION && !player.hasPermission("justauction.auction"))) {
             player.sendMessage(m.get("error.no-permission"));
             return;
         }
         long price;
+        Long buyout = null;
+        String badInput = priceArg;
         try {
             price = Money.parse(priceArg);
+            if (buyoutArg != null) {
+                badInput = buyoutArg;
+                buyout = Money.parse(buyoutArg);
+            }
         } catch (NumberFormatException e) {
-            player.sendMessage(m.get("sell.invalid-price", Messages.text("input", priceArg)));
+            player.sendMessage(m.get("sell.invalid-price", Messages.text("input", badInput)));
             return;
         }
         ItemStack hand = player.getInventory().getItemInMainHand();
@@ -50,21 +68,23 @@ public final class SellHandler {
             Ui.error(player, ctx.settings().sounds());
             return;
         }
+        final Long buyoutPrice = buyout;
         ItemStack snapshot = hand.clone();
         SellRequest request = new SellRequest(player.getUniqueId(), player.getName(), ItemCodec.encode(snapshot),
                 snapshot.getType().name(), snapshot.getAmount(), ItemCodec.searchText(snapshot), price,
-                maxListings(ctx, player), new HandTaker(ctx, player, snapshot));
+                maxListings(ctx, player), new HandTaker(ctx, player, snapshot), kind, buyoutPrice);
         ctx.service.sell(request).whenComplete((result, err) -> ctx.scheduler.runForEntity(player, () -> {
             if (err != null) {
                 ctx.log.log(Level.SEVERE, "Sell flow failed", err);
                 player.sendMessage(m.get("error.generic"));
             } else {
-                report(ctx, player, snapshot, price, result);
+                report(ctx, player, snapshot, price, buyoutPrice, result);
             }
         }, null));
     }
 
-    private static void report(Context ctx, Player player, ItemStack item, long price, SellResult result) {
+    private static void report(Context ctx, Player player, ItemStack item, long price,
+                               @org.jspecify.annotations.Nullable Long buyout, SellResult result) {
         Messages m = ctx.messages();
         var cfg = ctx.settings().service();
         TagResolver[] tags = {
@@ -79,13 +99,20 @@ public final class SellHandler {
         switch (result.status()) {
             case SUCCESS -> {
                 long salesFee = Money.fee(price, cfg.feePercent());
-                player.sendMessage(m.get("sell.success", TagResolver.resolver(tags),
-                        Messages.text("time", TimeFormat.left(m, cfg.durationMs())),
+                boolean auction = result.listing().isAuction();
+                String key = auction ? "sell.auction-started" : "sell.success";
+                player.sendMessage(m.get(key, TagResolver.resolver(tags),
+                        Messages.text("buyout", buyout == null ? m.raw("sell.no-buyout") : ctx.economy.format(buyout)),
+                        Messages.text("time", TimeFormat.left(m, result.listing().expiresAt() - result.listing().createdAt())),
                         Messages.text("percent", cfg.feePercent().stripTrailingZeros().toPlainString()),
                         Messages.text("net", ctx.economy.format(price - salesFee)),
                         Messages.text("id", Long.toString(result.listing().id()))));
                 Ui.success(player, sounds);
+                Broadcaster.listed(ctx, player.getName(), item, price, auction);
             }
+            case AUCTIONS_DISABLED -> fail(ctx, player, "sell.auctions-disabled", tags);
+            case BAD_BUYOUT -> fail(ctx, player, "sell.bad-buyout", tags);
+            case BLOCKED -> fail(ctx, player, "sell.blocked", tags);
             case PRICE_TOO_LOW -> fail(ctx, player, "sell.price-too-low", tags);
             case PRICE_TOO_HIGH -> fail(ctx, player, "sell.price-too-high", tags);
             case LIMIT_REACHED -> fail(ctx, player, "sell.limit-reached", tags);

@@ -85,10 +85,15 @@ public final class Migrations {
 
     /** @return the schema version after migrating */
     public static int migrate(Database db) throws SQLException {
+        return migrate(db, VERSIONS.size());
+    }
+
+    /** Migrates up to {@code target} (tests use this to simulate an older install). */
+    public static int migrate(Database db, int target) throws SQLException {
         return db.call(c -> {
             ensureVersionTable(c, db.dialect());
             int current = currentVersion(c);
-            for (int v = current + 1; v <= VERSIONS.size(); v++) {
+            for (int v = current + 1; v <= Math.min(target, VERSIONS.size()); v++) {
                 int version = v;
                 // MariaDB DDL auto-commits, so a half-applied version is possible there; SQLite rolls back.
                 Database.transaction(c, tx -> {

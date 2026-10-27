@@ -5,7 +5,7 @@
 
 # Config format version. Do not change: when you update the plugin, options that are new in the
 # newer version are added to this file automatically (your values stay, a backup is saved first).
-config-version: 2
+config-version: 3
 
 # Language of all player-facing messages: en, cs.
 # The files plugins/JustAuction/messages_<locale>.yml are yours to edit; missing keys fall back to the built-in text.
@@ -20,6 +20,16 @@ command:
   aliases:
     - auction
     - ah
+
+# Anonymous usage statistics through bStats (server count, Minecraft version, storage type, ...).
+# Set to false to switch them off for this plugin. The global switch is plugins/bStats/config.yml.
+metrics: true
+
+economy:
+  # auto    = use VaultUnlocked's newer economy API when it is installed, else the classic Vault API
+  # vault   = always the classic Vault API (works with Vault and VaultUnlocked)
+  # vault2  = always the VaultUnlocked API (fails to start without VaultUnlocked)
+  backend: auto
 
 storage:
   # sqlite  = single file in the plugin folder, zero setup (default)
@@ -79,6 +89,34 @@ listing:
       - REINFORCED_DEEPSLATE
     # Also reject containers (shulker boxes, bundles, ...) holding a blacklisted item.
     check-container-contents: true
+
+auction:
+  # Timed auctions with bidding: /ja auction <start price> [buyout price]. false = only fixed-price listings
+  # (auctions that are already running still finish).
+  enabled: true
+  # How long an auction runs.
+  duration-hours: 24
+  # Every bid has to beat the current top bid by at least this many percent.
+  min-increment-percent: 5
+  # Anti-sniping: a bid placed in the last N seconds extends the auction so that N seconds remain. 0 = off.
+  anti-snipe-seconds: 120
+
+# Announce market activity in the chat of all online players. Everything is off by default.
+# Players can opt out with the permission justauction.broadcast.receive (default: everybody).
+# The texts are in messages_<locale>.yml under "broadcast".
+broadcast:
+  # Skip announcements for prices below this (stops spam from cheap items). 0 = announce everything.
+  min-price: 0
+  # A player puts an item on sale at a fixed price.
+  listed: false
+  # A fixed-price item was bought.
+  sold: false
+  # A player starts an auction.
+  auction-started: false
+  # Somebody placed a new top bid.
+  auction-bid: false
+  # An auction ended with a winner (or was bought out).
+  auction-won: false
 
 gui:
   # Minimum time between two clicks of the same player in a menu.

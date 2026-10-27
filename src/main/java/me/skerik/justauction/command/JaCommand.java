@@ -14,6 +14,8 @@ import java.util.logging.Level;
 import me.skerik.justauction.Context;
 import me.skerik.justauction.JustAuctionPlugin;
 import me.skerik.justauction.config.Messages;
+import me.skerik.justauction.economy.Money;
+import me.skerik.justauction.gui.Bids;
 import me.skerik.justauction.gui.BrowseMenu;
 import me.skerik.justauction.gui.ClaimMenu;
 import me.skerik.justauction.gui.MyListingsMenu;
@@ -46,6 +48,25 @@ public final class JaCommand {
                         .requires(src -> src.getSender().hasPermission("justauction.sell"))
                         .then(Commands.argument("price", StringArgumentType.word())
                                 .executes(c -> player(c, (ctx, p) -> SellHandler.sell(ctx, p, StringArgumentType.getString(c, "price"))))))
+                .then(Commands.literal("auction")
+                        .requires(src -> src.getSender().hasPermission("justauction.sell")
+                                && src.getSender().hasPermission("justauction.auction"))
+                        .then(Commands.argument("start", StringArgumentType.word())
+                                .executes(c -> player(c, (ctx, p) -> SellHandler.auction(ctx, p,
+                                        StringArgumentType.getString(c, "start"), null)))
+                                .then(Commands.argument("buyout", StringArgumentType.word())
+                                        .executes(c -> player(c, (ctx, p) -> SellHandler.auction(ctx, p,
+                                                StringArgumentType.getString(c, "start"),
+                                                StringArgumentType.getString(c, "buyout")))))))
+                .then(Commands.literal("bid")
+                        .then(Commands.argument("id", LongArgumentType.longArg(1))
+                                .then(Commands.argument("amount", StringArgumentType.word())
+                                        .executes(c -> player(c, (ctx, p) -> bid(ctx, p, LongArgumentType.getLong(c, "id"),
+                                                StringArgumentType.getString(c, "amount")))))))
+                .then(Commands.literal("buyout")
+                        .then(Commands.argument("id", LongArgumentType.longArg(1))
+                                .executes(c -> player(c, (ctx, p) ->
+                                        Bids.bid(ctx, p, LongArgumentType.getLong(c, "id"), 0, true, () -> { })))))
                 .then(Commands.literal("mylistings")
                         .executes(c -> player(c, MyListingsMenu::open)))
                 .then(Commands.literal("claim")
@@ -82,6 +103,17 @@ public final class JaCommand {
         }
         action.accept(ctx, p);
         return 1;
+    }
+
+    private void bid(Context ctx, Player p, long id, String amountArg) {
+        long amount;
+        try {
+            amount = Money.parse(amountArg);
+        } catch (NumberFormatException e) {
+            p.sendMessage(ctx.messages().get("sell.invalid-price", Messages.text("input", amountArg)));
+            return;
+        }
+        Bids.bid(ctx, p, id, amount, false, () -> { });
     }
 
     private void claim(Context ctx, Player p) {
@@ -158,6 +190,13 @@ public final class JaCommand {
             sender.sendMessage(m.get("admin.removed", Messages.text("id", Long.toString(id)),
                     Messages.text("seller", l.sellerName())));
             ctx.log.info(sender.getName() + " removed listing " + id + " of " + l.sellerName() + " (item moved to their claims)");
+            if (l.bidder() != null) {
+                Player bidder = Bukkit.getPlayer(l.bidder());
+                if (bidder != null) {
+                    ctx.scheduler.runForEntity(bidder, () -> bidder.sendMessage(m.get("bid.removed-refund",
+                            Messages.text("id", Long.toString(id)), Messages.text("bid", ctx.economy.format(l.bid())))), null);
+                }
+            }
             Player owner = Bukkit.getPlayer(l.seller());
             if (owner != null) {
                 ctx.scheduler.runForEntity(owner, () -> owner.sendMessage(m.get("admin.removed-notice")), null);

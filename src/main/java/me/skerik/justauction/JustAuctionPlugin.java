@@ -14,6 +14,7 @@ import me.skerik.justauction.config.Settings;
 import me.skerik.justauction.economy.VaultEconomyBridge;
 import me.skerik.justauction.gui.MenuListener;
 import me.skerik.justauction.gui.MenuManager;
+import me.skerik.justauction.notify.Settlements;
 import me.skerik.justauction.service.AuctionService;
 import me.skerik.justauction.service.ClaimService;
 import me.skerik.justauction.service.RecoveryLog;
@@ -94,6 +95,7 @@ public final class JustAuctionPlugin extends JavaPlugin implements Listener {
         var recovery = new RecoveryLog.File(getDataFolder().toPath().resolve("recovery"));
         var service = new AuctionService(store, economy, scheduler, recovery, getLogger(), System::currentTimeMillis,
                 JaCommand::nameOf, () -> settings.service());
+        service.hooks(new BukkitHooks());
         var menus = new MenuManager(scheduler);
         var claims = new ClaimService(store, scheduler, getLogger());
         context = new Context(this, scheduler, service, economy, claims, menus, settings, messages);
@@ -133,6 +135,21 @@ public final class JustAuctionPlugin extends JavaPlugin implements Listener {
                 }
             });
         }), 100, 600));
+        // Ended auctions with a winner: pay the seller, deliver the item, tell everybody
+        timers.add(scheduler.runAsyncTimer(() -> service.settleDue(50).whenComplete((results, t) -> {
+            Context ctx = context;
+            if (t != null) getLogger().log(Level.WARNING, "Auction settlement sweep failed", t);
+            else if (ctx != null) results.forEach(r -> Settlements.announce(ctx, r));
+        }), 100, 200));
+        // Outbid money that could not be paid back immediately (crash, economy unavailable)
+        service.processRefunds(0).whenComplete((n, t) -> {
+            if (t != null) getLogger().log(Level.WARNING, "Startup refund sweep failed", t);
+            else if (n > 0) getLogger().warning("Paid " + n + " pending refund(s) from the ledger");
+        });
+        timers.add(scheduler.runAsyncTimer(() -> service.processRefunds(30_000).whenComplete((n, t) -> {
+            if (t != null) getLogger().log(Level.WARNING, "Refund sweep failed", t);
+            else if (n > 0) getLogger().info("Paid " + n + " pending refund(s) from the ledger");
+        }), 1200, 1200));
         // Purchases that got stuck while the server kept running
         timers.add(scheduler.runAsyncTimer(() -> service.recoverStuck(120_000).whenComplete((a, t) -> {
             if (t != null) getLogger().log(Level.WARNING, "Recovery sweep failed", t);

@@ -18,7 +18,20 @@ public record Settings(
         int claimRetentionDays, int defaultMaxListings, Set<String> blacklistMaterials, boolean blacklistContents,
         long clickCooldownMs, int refreshTicks, boolean sounds,
         String storageType, String sqliteFile, int sqlitePool, String dbHost, int dbPort, String dbName,
-        String dbUser, String dbPassword, int dbPool, String dbSslMode) {
+        String dbUser, String dbPassword, int dbPool, String dbSslMode,
+        Broadcast broadcast, boolean metrics, String economyBackend) {
+
+    /**
+     * Which events are announced to every online player (those with justauction.broadcast.receive).
+     *
+     * @param minPrice announcements are skipped for prices below this amount (minor units)
+     */
+    public record Broadcast(boolean listed, boolean sold, boolean auctionStarted, boolean auctionBid,
+                            boolean auctionWon, long minPrice) {
+        public boolean any() {
+            return listed || sold || auctionStarted || auctionBid || auctionWon;
+        }
+    }
 
     public static Settings load(FileConfiguration c, Logger log) {
         long minPrice = price(c, "listing.min-price", "1.00", log);
@@ -34,8 +47,20 @@ public record Settings(
             fee = BigDecimal.valueOf(5);
         }
         long durationHours = Math.max(1, c.getLong("listing.duration-hours", 48));
+        BigDecimal increment = BigDecimal.valueOf(c.getDouble("auction.min-increment-percent", 5));
+        if (increment.signum() < 0 || increment.compareTo(BigDecimal.valueOf(1000)) > 0) {
+            log.warning("auction.min-increment-percent must be 0-1000; using 5");
+            increment = BigDecimal.valueOf(5);
+        }
         ServiceConfig service = new ServiceConfig(durationHours * 3_600_000L, fee,
-                Math.max(0, price(c, "listing.listing-fee", "0", log)), minPrice, maxPrice);
+                Math.max(0, price(c, "listing.listing-fee", "0", log)), minPrice, maxPrice,
+                Math.max(1, c.getLong("auction.duration-hours", 24)) * 3_600_000L, increment,
+                Math.max(0, c.getLong("auction.anti-snipe-seconds", 120)) * 1000L,
+                c.getBoolean("auction.enabled", true));
+        Broadcast broadcast = new Broadcast(
+                c.getBoolean("broadcast.listed", false), c.getBoolean("broadcast.sold", false),
+                c.getBoolean("broadcast.auction-started", false), c.getBoolean("broadcast.auction-bid", false),
+                c.getBoolean("broadcast.auction-won", false), Math.max(0, price(c, "broadcast.min-price", "0", log)));
         ConfigurationSection mariadb = c.getConfigurationSection("storage.mariadb");
         return new Settings(
                 c.getString("locale", "en"),
@@ -58,7 +83,9 @@ public record Settings(
                 mariadb == null ? "justauction" : mariadb.getString("user", "justauction"),
                 mariadb == null ? "" : mariadb.getString("password", ""),
                 Math.max(1, mariadb == null ? 6 : mariadb.getInt("pool-size", 6)),
-                mariadb == null ? "" : mariadb.getString("ssl-mode", "").trim());
+                mariadb == null ? "" : mariadb.getString("ssl-mode", "").trim(),
+                broadcast, c.getBoolean("metrics", true),
+                c.getString("economy.backend", "auto").toLowerCase(java.util.Locale.ROOT).strip());
     }
 
     public Blacklist blacklist() {

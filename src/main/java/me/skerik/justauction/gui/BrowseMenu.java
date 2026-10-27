@@ -76,7 +76,8 @@ public final class BrowseMenu extends Menu {
             if (i < items.size()) {
                 Listing l = items.get(i);
                 shown[i] = l;
-                String hint = l.seller().equals(player.getUniqueId()) ? "gui.hint.own" : "gui.hint.buy";
+                boolean own = l.seller().equals(player.getUniqueId());
+                String hint = l.isAuction() ? (own ? "gui.hint.own-auction" : "gui.hint.bid") : (own ? "gui.hint.own" : "gui.hint.buy");
                 inventory.setItem(i, ListingItems.listing(ctx, l, hint));
             } else {
                 shown[i] = null;
@@ -110,7 +111,9 @@ public final class BrowseMenu extends Menu {
                 player.sendMessage(ctx.messages().get("browse.own-listing"));
                 return;
             }
-            ConfirmMenu.open(ctx, player, l, () -> open(ctx, player, page, sort, search));
+            Runnable back = () -> open(ctx, player, page, sort, search);
+            if (l.isAuction()) BidMenu.open(ctx, player, l, back);
+            else ConfirmMenu.open(ctx, player, l, back);
             return;
         }
         switch (slot) {

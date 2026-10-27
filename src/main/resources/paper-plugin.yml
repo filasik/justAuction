@@ -20,6 +20,12 @@ permissions:
   justauction.sell:
     description: List items for sale
     default: true
+  justauction.auction:
+    description: Start timed auctions (/ja auction)
+    default: true
+  justauction.broadcast.receive:
+    description: See the public announcements configured under "broadcast" in config.yml
+    default: true
   justauction.bypass.limit:
     description: Ignore the per-player listing limit
     default: false

@@ -48,7 +48,9 @@ public final class MyListingsMenu extends Menu {
         Messages m = ctx.messages();
         for (int i = 0; i < MAX; i++) {
             shown[i] = i < list.size() ? list.get(i) : null;
-            inventory.setItem(i, shown[i] == null ? null : ListingItems.listing(ctx, shown[i], "gui.hint.cancel"));
+            inventory.setItem(i, shown[i] == null ? null : ListingItems.listing(ctx, shown[i],
+                    shown[i].isAuction() ? (shown[i].bidder() != null ? "gui.hint.auction-has-bids" : "gui.hint.cancel-auction")
+                            : "gui.hint.cancel"));
         }
         for (int i = 45; i < 54; i++) inventory.setItem(i, Ui.filler());
         inventory.setItem(BACK, Ui.button(Material.ARROW, m.get("gui.button.back"), m.list("gui.button.back-lore")));
