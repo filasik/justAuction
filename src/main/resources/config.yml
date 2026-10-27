@@ -3,6 +3,10 @@
 #  Reload most values with /ja reload. Storage and command aliases need a restart.
 # ============================================================================
 
+# Config format version. Do not change: when you update the plugin, options that are new in the
+# newer version are added to this file automatically (your values stay, a backup is saved first).
+config-version: 2
+
 # Language of all player-facing messages: en, cs.
 # The files plugins/JustAuction/messages_<locale>.yml are yours to edit; missing keys fall back to the built-in text.
 locale: en

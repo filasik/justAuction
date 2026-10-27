@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Level;
 import me.skerik.justauction.command.JaCommand;
+import me.skerik.justauction.config.ConfigUpdater;
 import me.skerik.justauction.config.Messages;
 import me.skerik.justauction.config.Settings;
 import me.skerik.justauction.economy.VaultEconomyBridge;
@@ -46,6 +47,7 @@ public final class JustAuctionPlugin extends JavaPlugin implements Listener {
     public void onEnable() {
         enableStarted = System.nanoTime();
         saveDefaultConfig();
+        if (ConfigUpdater.update(this) > 0) reloadConfig();
         settings = Settings.load(getConfig(), getLogger());
         messages = Messages.load(this, settings.locale());
         scheduler = new PaperScheduler(this);

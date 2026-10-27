@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.2
+
+- New: `config.yml` is updated automatically. Options added by a newer version are appended with their comments (`config-version`), your values and comments stay, and a backup `config.yml.bak-v<N>` is saved first
+
 ## 1.0.1
 
 - Fix: MySQL 8+ with its default self-signed certificate could not connect (`caching_sha2_password` error). New option `storage.mariadb.ssl-mode` (set `trust` for this case); the log now hints at it
