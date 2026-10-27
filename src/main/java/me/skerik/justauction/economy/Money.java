@@ -40,6 +40,13 @@ public final class Money {
                 .setScale(0, RoundingMode.HALF_UP).longValueExact();
     }
 
+    /** Lowest acceptable bid on top of {@code current}: at least {@code percent} % more, and at least one minor unit. */
+    public static long nextBid(long current, BigDecimal percent) {
+        long step = BigDecimal.valueOf(current).multiply(percent).movePointLeft(2)
+                .setScale(0, RoundingMode.CEILING).longValueExact();
+        return current + Math.max(1, step);
+    }
+
     public static long fromDecimal(BigDecimal amount) {
         return amount.setScale(2, RoundingMode.HALF_UP).movePointRight(2).longValueExact();
     }

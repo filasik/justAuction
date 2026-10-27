@@ -7,7 +7,9 @@ import java.util.concurrent.CompletableFuture;
 import me.skerik.justauction.model.Claim;
 import me.skerik.justauction.model.ClaimReason;
 import me.skerik.justauction.model.Listing;
+import me.skerik.justauction.model.ListingKind;
 import me.skerik.justauction.model.Page;
+import me.skerik.justauction.model.Refund;
 import me.skerik.justauction.model.Sort;
 import me.skerik.justauction.model.Transaction;
 import org.jspecify.annotations.Nullable;
@@ -20,19 +22,36 @@ public interface ListingStore {
 
     record NewListing(
             UUID seller, String sellerName, byte[] item, String material, int amount, String searchText,
-            long price, long createdAt, long expiresAt) {
+            long price, long createdAt, long expiresAt, ListingKind kind, @Nullable Long buyout) {
+
+        public NewListing(UUID seller, String sellerName, byte[] item, String material, int amount, String searchText,
+                          long price, long createdAt, long expiresAt) {
+            this(seller, sellerName, item, material, amount, searchText, price, createdAt, expiresAt, ListingKind.FIXED, null);
+        }
     }
 
-    record Cancelled(Listing listing, long claimId) {
+    /** @param refundId the refund row owed to the bidder of a removed auction, or 0 */
+    record Cancelled(Listing listing, long claimId, long refundId) {
     }
 
-    enum CancelFailure { NOT_FOUND, NOT_ACTIVE, NOT_OWNER }
+    enum CancelFailure { NOT_FOUND, NOT_ACTIVE, NOT_OWNER, HAS_BIDS }
 
     /** Either a cancelled listing or the reason it could not be cancelled. */
     record CancelOutcome(@Nullable Cancelled cancelled, @Nullable CancelFailure failure) {
     }
 
     record Expired(UUID owner, long claimId, Listing listing) {
+    }
+
+    /**
+     * Result of {@link #bid}. When {@code accepted}, {@code refundId} is the refund row owed to the previous top
+     * bidder (0 if there was none) and {@code expiresAt} the (possibly extended) end of the auction.
+     */
+    record BidOutcome(boolean accepted, long refundId, @Nullable UUID previousBidder, long previousBid,
+                      long expiresAt) {
+        public static BidOutcome rejected() {
+            return new BidOutcome(false, 0, null, 0, 0);
+        }
     }
 
     /** @return empty if the seller already has {@code maxActive} listings */
@@ -63,7 +82,29 @@ public interface ListingStore {
 
     CompletableFuture<CancelOutcome> cancel(long id, @Nullable UUID actor, boolean admin, ClaimReason reason);
 
-    /** ACTIVE listings past their end -> EXPIRED, each with a claim for its owner. */
+    /**
+     * Records a bid in one transaction: succeeds only while the auction is ACTIVE, not ended, and still has
+     * {@code expectedBidCount} bids (so two simultaneous bids cannot both win). The previous top bid becomes a
+     * pending refund row. A bid within {@code snipeWindowMs} of the end moves the end to {@code now + snipeWindowMs};
+     * {@code endNow} (buyout) ends the auction immediately.
+     */
+    CompletableFuture<BidOutcome> bid(long id, UUID bidder, String bidderName, long amount, int expectedBidCount,
+                                      long now, long snipeWindowMs, boolean endNow);
+
+    /** ACTIVE auctions with at least one bid whose end has passed, waiting to be settled. */
+    CompletableFuture<List<Listing>> dueAuctions(long now, int limit);
+
+    /** ACTIVE -> RESERVED for the top bidder at stage 1 (the bid is already withdrawn). False if someone else did it. */
+    CompletableFuture<Boolean> reserveWinner(long id, long now);
+
+    /** RESERVED -> EXPIRED with the item going to the seller's claims. Empty if the listing was not RESERVED. */
+    CompletableFuture<Optional<Long>> abortSale(long id, long now);
+
+    CompletableFuture<List<Refund>> refundsBefore(long createdBefore);
+
+    CompletableFuture<Boolean> deleteRefund(long id);
+
+    /** ACTIVE listings past their end (auctions without bids; auctions with bids are settled) -> EXPIRED, each with a claim for its owner. */
     CompletableFuture<List<Expired>> expireDue(long now, int limit);
 
     CompletableFuture<List<Listing>> reservedBefore(long reservedAt);

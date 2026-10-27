@@ -134,6 +134,12 @@ final class TestKit {
         @Override public CompletableFuture<java.util.Optional<Long>> complete(long id, UUID b, String bn, long fee, long now) { return gate("complete", () -> delegate.complete(id, b, bn, fee, now)); }
         @Override public CompletableFuture<CancelOutcome> cancel(long id, UUID a, boolean admin, me.skerik.justauction.model.ClaimReason r) { return gate("cancel", () -> delegate.cancel(id, a, admin, r)); }
         @Override public CompletableFuture<java.util.List<Expired>> expireDue(long now, int limit) { return gate("expireDue", () -> delegate.expireDue(now, limit)); }
+        @Override public CompletableFuture<BidOutcome> bid(long id, UUID b, String bn, long amount, int expected, long now, long snipe, boolean endNow) { return gate("bid", () -> delegate.bid(id, b, bn, amount, expected, now, snipe, endNow)); }
+        @Override public CompletableFuture<java.util.List<me.skerik.justauction.model.Listing>> dueAuctions(long now, int limit) { return gate("dueAuctions", () -> delegate.dueAuctions(now, limit)); }
+        @Override public CompletableFuture<Boolean> reserveWinner(long id, long now) { return gate("reserveWinner", () -> delegate.reserveWinner(id, now)); }
+        @Override public CompletableFuture<java.util.Optional<Long>> abortSale(long id, long now) { return gate("abortSale", () -> delegate.abortSale(id, now)); }
+        @Override public CompletableFuture<java.util.List<me.skerik.justauction.model.Refund>> refundsBefore(long t) { return gate("refundsBefore", () -> delegate.refundsBefore(t)); }
+        @Override public CompletableFuture<Boolean> deleteRefund(long id) { return gate("deleteRefund", () -> delegate.deleteRefund(id)); }
         @Override public CompletableFuture<java.util.List<me.skerik.justauction.model.Listing>> reservedBefore(long t) { return gate("reservedBefore", () -> delegate.reservedBefore(t)); }
         @Override public CompletableFuture<java.util.List<me.skerik.justauction.model.Claim>> claims(UUID o) { return gate("claims", () -> delegate.claims(o)); }
         @Override public CompletableFuture<Integer> claimCount(UUID o) { return gate("claimCount", () -> delegate.claimCount(o)); }
@@ -152,8 +158,10 @@ final class TestKit {
         final RecoveryLog.InMemory recovery = new RecoveryLog.InMemory();
         final AuctionService service;
         volatile long now = 1_000_000_000L;
+        final ServiceConfig cfg;
 
         Env(DbConfig dbConfig, ServiceConfig cfg) throws Exception {
+            this.cfg = cfg;
             db = new Database(dbConfig);
             Migrations.migrate(db);
             sql = new SqlListingStore(db);

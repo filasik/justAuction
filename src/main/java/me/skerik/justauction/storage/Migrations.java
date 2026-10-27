@@ -61,7 +61,23 @@ public final class Migrations {
                       created_at BIGINT NOT NULL
                     )""",
                     "CREATE INDEX ja_tx_seller ON ja_transactions (seller, created_at)",
-                    "CREATE INDEX ja_tx_buyer ON ja_transactions (buyer, created_at)"));
+                    "CREATE INDEX ja_tx_buyer ON ja_transactions (buyer, created_at)"),
+            // v2 (1.1.0): auctions and the refund ledger
+            List.of(
+                    "ALTER TABLE ja_listings ADD COLUMN kind VARCHAR(8) NOT NULL DEFAULT 'FIXED'",
+                    "ALTER TABLE ja_listings ADD COLUMN buyout BIGINT NULL",
+                    "ALTER TABLE ja_listings ADD COLUMN bid BIGINT NULL",
+                    "ALTER TABLE ja_listings ADD COLUMN bidder VARCHAR(36) NULL",
+                    "ALTER TABLE ja_listings ADD COLUMN bidder_name VARCHAR(32) NULL",
+                    "ALTER TABLE ja_listings ADD COLUMN bid_count INT NOT NULL DEFAULT 0",
+                    """
+                    CREATE TABLE ja_refunds (
+                      id {ID},
+                      player VARCHAR(36) NOT NULL,
+                      amount BIGINT NOT NULL,
+                      listing_id BIGINT NOT NULL,
+                      created_at BIGINT NOT NULL
+                    )"""));
 
     public static int latestVersion() {
         return VERSIONS.size();

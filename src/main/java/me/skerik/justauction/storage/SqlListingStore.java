@@ -14,8 +14,10 @@ import java.util.concurrent.CompletableFuture;
 import me.skerik.justauction.model.Claim;
 import me.skerik.justauction.model.ClaimReason;
 import me.skerik.justauction.model.Listing;
+import me.skerik.justauction.model.ListingKind;
 import me.skerik.justauction.model.ListingStatus;
 import me.skerik.justauction.model.Page;
+import me.skerik.justauction.model.Refund;
 import me.skerik.justauction.model.Sort;
 import me.skerik.justauction.model.Transaction;
 import org.jspecify.annotations.Nullable;
@@ -23,7 +25,8 @@ import org.jspecify.annotations.Nullable;
 public final class SqlListingStore implements ListingStore {
 
     private static final String LISTING_COLUMNS =
-            "id, seller, seller_name, item, material, amount, price, status, buyer, stage, created_at, expires_at";
+            "id, seller, seller_name, item, material, amount, price, status, buyer, stage, created_at, expires_at, "
+                    + "kind, buyout, bid, bidder, bidder_name, bid_count";
 
     private final Database db;
 
@@ -45,7 +48,7 @@ public final class SqlListingStore implements ListingStore {
             long id;
             try (PreparedStatement ps = tx.prepareStatement(
                     "INSERT INTO ja_listings (seller, seller_name, item, material, amount, search_text, price, status, "
-                            + "stage, created_at, expires_at) VALUES (?, ?, ?, ?, ?, ?, ?, 'ACTIVE', 0, ?, ?)",
+                            + "stage, created_at, expires_at, kind, buyout) VALUES (?, ?, ?, ?, ?, ?, ?, 'ACTIVE', 0, ?, ?, ?, ?)",
                     Statement.RETURN_GENERATED_KEYS)) {
                 ps.setString(1, n.seller().toString());
                 ps.setString(2, n.sellerName());
@@ -56,11 +59,14 @@ public final class SqlListingStore implements ListingStore {
                 ps.setLong(7, n.price());
                 ps.setLong(8, n.createdAt());
                 ps.setLong(9, n.expiresAt());
+                ps.setString(10, n.kind().name());
+                ps.setObject(11, n.buyout());
                 ps.executeUpdate();
                 id = generatedKey(ps);
             }
             return Optional.of(new Listing(id, n.seller(), n.sellerName(), n.item(), n.material(), n.amount(),
-                    n.price(), ListingStatus.ACTIVE, null, 0, n.createdAt(), n.expiresAt()));
+                    n.price(), ListingStatus.ACTIVE, null, 0, n.createdAt(), n.expiresAt(), n.kind(), n.buyout(),
+                    null, null, null, 0));
         }));
     }
 
@@ -128,7 +134,7 @@ public final class SqlListingStore implements ListingStore {
     public CompletableFuture<Boolean> reserve(long id, UUID buyer, long now) {
         return db.supply(c -> {
             try (PreparedStatement ps = c.prepareStatement("UPDATE ja_listings SET status = 'RESERVED', buyer = ?, "
-                    + "stage = 0, reserved_at = ? WHERE id = ? AND status = 'ACTIVE' AND expires_at > ? AND seller <> ?")) {
+                    + "stage = 0, reserved_at = ? WHERE id = ? AND status = 'ACTIVE' AND kind = 'FIXED' AND expires_at > ? AND seller <> ?")) {
                 ps.setString(1, buyer.toString());
                 ps.setLong(2, now);
                 ps.setLong(3, id);
@@ -185,7 +191,7 @@ public final class SqlListingStore implements ListingStore {
                 ps.setString(5, buyerName);
                 ps.setString(6, l.material());
                 ps.setInt(7, l.amount());
-                ps.setLong(8, l.price());
+                ps.setLong(8, l.finalPrice());
                 ps.setLong(9, fee);
                 ps.setLong(10, now);
                 ps.executeUpdate();
@@ -201,13 +207,16 @@ public final class SqlListingStore implements ListingStore {
             if (l == null) return new CancelOutcome(null, CancelFailure.NOT_FOUND);
             if (l.status() != ListingStatus.ACTIVE) return new CancelOutcome(null, CancelFailure.NOT_ACTIVE);
             if (!admin && !l.seller().equals(actor)) return new CancelOutcome(null, CancelFailure.NOT_OWNER);
+            if (!admin && l.bidder() != null) return new CancelOutcome(null, CancelFailure.HAS_BIDS);
             try (PreparedStatement ps = tx.prepareStatement(
                     "UPDATE ja_listings SET status = 'CANCELLED' WHERE id = ? AND status = 'ACTIVE'")) {
                 ps.setLong(1, id);
                 if (ps.executeUpdate() != 1) return new CancelOutcome(null, CancelFailure.NOT_ACTIVE);
             }
-            long claim = insertClaim(tx, l.seller(), l.item(), l.material(), l.amount(), reason, System.currentTimeMillis());
-            return new CancelOutcome(new Cancelled(l, claim), null);
+            long now = System.currentTimeMillis();
+            long claim = insertClaim(tx, l.seller(), l.item(), l.material(), l.amount(), reason, now);
+            long refund = l.bidder() == null ? 0 : insertRefund(tx, l.bidder(), l.bid(), l.id(), now);
+            return new CancelOutcome(new Cancelled(l, claim, refund), null);
         }));
     }
 
@@ -216,7 +225,7 @@ public final class SqlListingStore implements ListingStore {
         return db.supply(c -> Database.transaction(c, tx -> {
             List<Listing> due = new ArrayList<>();
             try (PreparedStatement ps = tx.prepareStatement("SELECT " + LISTING_COLUMNS
-                    + " FROM ja_listings WHERE status = 'ACTIVE' AND expires_at <= ? ORDER BY expires_at LIMIT ?")) {
+                    + " FROM ja_listings WHERE status = 'ACTIVE' AND bidder IS NULL AND expires_at <= ? ORDER BY expires_at LIMIT ?")) {
                 ps.setLong(1, now);
                 ps.setInt(2, limit);
                 try (ResultSet rs = ps.executeQuery()) {
@@ -226,7 +235,7 @@ public final class SqlListingStore implements ListingStore {
             List<Expired> out = new ArrayList<>();
             for (Listing l : due) {
                 try (PreparedStatement ps = tx.prepareStatement(
-                        "UPDATE ja_listings SET status = 'EXPIRED' WHERE id = ? AND status = 'ACTIVE'")) {
+                        "UPDATE ja_listings SET status = 'EXPIRED' WHERE id = ? AND status = 'ACTIVE' AND bidder IS NULL")) {
                     ps.setLong(1, l.id());
                     if (ps.executeUpdate() != 1) continue;
                 }
@@ -235,6 +244,108 @@ public final class SqlListingStore implements ListingStore {
             }
             return out;
         }));
+    }
+
+    @Override
+    public CompletableFuture<BidOutcome> bid(long id, UUID bidder, String bidderName, long amount, int expectedBidCount,
+                                             long now, long snipeWindowMs, boolean endNow) {
+        return db.supply(c -> Database.transaction(c, tx -> {
+            Listing l = selectListing(tx, id);
+            if (l == null || l.status() != ListingStatus.ACTIVE || !l.isAuction() || l.expiresAt() <= now
+                    || l.bidCount() != expectedBidCount || l.seller().equals(bidder)) {
+                return BidOutcome.rejected();
+            }
+            long expiresAt = l.expiresAt();
+            if (endNow) expiresAt = now;
+            else if (snipeWindowMs > 0 && expiresAt - now < snipeWindowMs) expiresAt = now + snipeWindowMs;
+            try (PreparedStatement ps = tx.prepareStatement("UPDATE ja_listings SET bid = ?, bidder = ?, bidder_name = ?, "
+                    + "bid_count = bid_count + 1, expires_at = ? WHERE id = ? AND status = 'ACTIVE' AND kind = 'AUCTION' "
+                    + "AND bid_count = ? AND expires_at > ?")) {
+                ps.setLong(1, amount);
+                ps.setString(2, bidder.toString());
+                ps.setString(3, bidderName);
+                ps.setLong(4, expiresAt);
+                ps.setLong(5, id);
+                ps.setInt(6, expectedBidCount);
+                ps.setLong(7, now);
+                if (ps.executeUpdate() != 1) return BidOutcome.rejected();
+            }
+            long refund = l.bidder() == null ? 0 : insertRefund(tx, l.bidder(), l.bid(), id, now);
+            return new BidOutcome(true, refund, l.bidder(), l.bid() == null ? 0 : l.bid(), expiresAt);
+        }));
+    }
+
+    @Override
+    public CompletableFuture<List<Listing>> dueAuctions(long now, int limit) {
+        return db.supply(c -> {
+            List<Listing> out = new ArrayList<>();
+            try (PreparedStatement ps = c.prepareStatement("SELECT " + LISTING_COLUMNS + " FROM ja_listings WHERE "
+                    + "status = 'ACTIVE' AND kind = 'AUCTION' AND bidder IS NOT NULL AND expires_at <= ? "
+                    + "ORDER BY expires_at LIMIT ?")) {
+                ps.setLong(1, now);
+                ps.setInt(2, limit);
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) out.add(mapListing(rs));
+                }
+            }
+            return out;
+        });
+    }
+
+    @Override
+    public CompletableFuture<Boolean> reserveWinner(long id, long now) {
+        return db.supply(c -> {
+            try (PreparedStatement ps = c.prepareStatement("UPDATE ja_listings SET status = 'RESERVED', buyer = bidder, "
+                    + "stage = 1, reserved_at = ? WHERE id = ? AND status = 'ACTIVE' AND kind = 'AUCTION' "
+                    + "AND bidder IS NOT NULL AND expires_at <= ?")) {
+                ps.setLong(1, now);
+                ps.setLong(2, id);
+                ps.setLong(3, now);
+                return ps.executeUpdate() == 1;
+            }
+        });
+    }
+
+    @Override
+    public CompletableFuture<Optional<Long>> abortSale(long id, long now) {
+        return db.supply(c -> Database.transaction(c, tx -> {
+            Listing l = selectListing(tx, id);
+            if (l == null || l.status() != ListingStatus.RESERVED) return Optional.<Long>empty();
+            try (PreparedStatement ps = tx.prepareStatement(
+                    "UPDATE ja_listings SET status = 'EXPIRED' WHERE id = ? AND status = 'RESERVED'")) {
+                ps.setLong(1, id);
+                if (ps.executeUpdate() != 1) return Optional.<Long>empty();
+            }
+            return Optional.of(insertClaim(tx, l.seller(), l.item(), l.material(), l.amount(), ClaimReason.EXPIRED, now));
+        }));
+    }
+
+    @Override
+    public CompletableFuture<List<Refund>> refundsBefore(long createdBefore) {
+        return db.supply(c -> {
+            List<Refund> out = new ArrayList<>();
+            try (PreparedStatement ps = c.prepareStatement("SELECT id, player, amount, listing_id, created_at "
+                    + "FROM ja_refunds WHERE created_at <= ? ORDER BY id")) {
+                ps.setLong(1, createdBefore);
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        out.add(new Refund(rs.getLong(1), UUID.fromString(rs.getString(2)), rs.getLong(3),
+                                rs.getLong(4), rs.getLong(5)));
+                    }
+                }
+            }
+            return out;
+        });
+    }
+
+    @Override
+    public CompletableFuture<Boolean> deleteRefund(long id) {
+        return db.supply(c -> {
+            try (PreparedStatement ps = c.prepareStatement("DELETE FROM ja_refunds WHERE id = ?")) {
+                ps.setLong(1, id);
+                return ps.executeUpdate() == 1;
+            }
+        });
     }
 
     @Override
@@ -366,6 +477,19 @@ public final class SqlListingStore implements ListingStore {
         }
     }
 
+    private static long insertRefund(Connection c, UUID player, long amount, long listingId, long now) throws SQLException {
+        try (PreparedStatement ps = c.prepareStatement(
+                "INSERT INTO ja_refunds (player, amount, listing_id, created_at) VALUES (?, ?, ?, ?)",
+                Statement.RETURN_GENERATED_KEYS)) {
+            ps.setString(1, player.toString());
+            ps.setLong(2, amount);
+            ps.setLong(3, listingId);
+            ps.setLong(4, now);
+            ps.executeUpdate();
+            return generatedKey(ps);
+        }
+    }
+
     private static long generatedKey(PreparedStatement ps) throws SQLException {
         try (ResultSet keys = ps.getGeneratedKeys()) {
             if (!keys.next()) throw new SQLException("no generated key");
@@ -375,9 +499,16 @@ public final class SqlListingStore implements ListingStore {
 
     private static Listing mapListing(ResultSet rs) throws SQLException {
         String buyer = rs.getString(9);
+        String bidder = rs.getString(16);
+        long bid = rs.getLong(15);
+        boolean hasBid = !rs.wasNull();
+        long buyout = rs.getLong(14);
+        boolean hasBuyout = !rs.wasNull();
         return new Listing(rs.getLong(1), UUID.fromString(rs.getString(2)), rs.getString(3), rs.getBytes(4),
                 rs.getString(5), rs.getInt(6), rs.getLong(7), ListingStatus.valueOf(rs.getString(8)),
-                buyer == null ? null : UUID.fromString(buyer), rs.getInt(10), rs.getLong(11), rs.getLong(12));
+                buyer == null ? null : UUID.fromString(buyer), rs.getInt(10), rs.getLong(11), rs.getLong(12),
+                ListingKind.valueOf(rs.getString(13)), hasBuyout ? buyout : null, hasBid ? bid : null,
+                bidder == null ? null : UUID.fromString(bidder), rs.getString(17), rs.getInt(18));
     }
 
     private static Claim mapClaim(ResultSet rs) throws SQLException {
