@@ -1,0 +1,149 @@
+# Zprávy JustAuction (MiniMessage). Chybějící klíče se doplní z vestavěné angličtiny.
+# Zástupné znaky v <lomených závorkách> plugin vyplní; nech je tam.
+prefix: '<dark_gray>[<gold>Aukce<dark_gray>]<reset>'
+
+error:
+  not-ready: '<prefix> <red>Aukční síň se ještě spouští. Zkus to za chvíli.'
+  players-only: '<prefix> <red>Tento příkaz mohou použít jen hráči.'
+  no-permission: '<prefix> <red>K tomu nemáš oprávnění.'
+  generic: '<prefix> <red>Něco se pokazilo. Nic se neztratilo; zkus to znovu nebo napiš adminovi.'
+
+time:
+  expired: 'vypršelo'
+  days: '{n} d'
+  hours: '{n} h'
+  minutes: '{n} min'
+  seconds: '{n} s'
+
+sell:
+  invalid-price: '<prefix> <red>"<input>" není platná cena. Příklad: <white>/ja sell 1500</white>, <white>2.5k</white> nebo <white>1.2m</white>.'
+  no-item: '<prefix> <red>Předmět k prodeji drž v hlavní ruce.'
+  blacklisted: '<prefix> <red>Tento předmět nelze v aukci prodávat (<material>).'
+  success: '<prefix> <green>Nabídnuto <white><amount>x <item></white> za <gold><price></gold> (nabídka č. <id>). Po poplatku <percent> % dostaneš <gold><net></gold>. Visí <white><time></white>.'
+  price-too-low: '<prefix> <red>Minimální cena je <gold><min></gold>.'
+  price-too-high: '<prefix> <red>Maximální cena je <gold><max></gold>.'
+  limit-reached: '<prefix> <red>Už máš maximum <white><limit></white> aktivních nabídek.'
+  cannot-afford-fee: '<prefix> <red>Na vytvoření nabídky potřebuješ <gold><fee></gold>.'
+  item-gone: '<prefix> <red>Předmět zmizel z ruky dřív, než šel nabídnout. Nic se neúčtovalo.'
+  busy: '<prefix> <red>Tvoje předchozí nabídka se ještě zpracovává.'
+  error: '<prefix> <red>Nabídku se nepodařilo uložit. Předmět i peníze ti byly vráceny.'
+  sold: '<prefix> <green><buyer> koupil <white><amount>x <item></white> za <gold><price></gold>. Dostal jsi <gold><earned></gold> (poplatek <fee>).'
+
+buy:
+  success: '<prefix> <green>Koupil jsi <white><amount>x <item></white> za <gold><price></gold>.'
+  to-claim: '<prefix> <yellow>Máš plný inventář. Předmět na tebe čeká: <white>/ja claim</white>.'
+  not-available: '<prefix> <red>Tato nabídka už není dostupná.'
+  own-listing: '<prefix> <red>Vlastní nabídku koupit nemůžeš.'
+  insufficient-funds: '<prefix> <red>Nemáš dost peněz na <gold><price></gold>.'
+  payment-failed: '<prefix> <red>Platba selhala. Nic ti nebylo strženo.'
+  seller-payment-failed: '<prefix> <red>Prodejci nešlo zaplatit, nákup byl zrušen. Peníze ti byly vráceny.'
+  delayed: '<prefix> <yellow>Platba proběhla, ale dokončení nákupu se zdrží. Předmět dorazí automaticky do <white>/ja claim</white>; pokud ne, kontaktuj admina.'
+
+cancel:
+  success: '<prefix> <green>Nabídka zrušena: <white><amount>x <item></white> se ti vrátilo.'
+  to-claim: '<prefix> <yellow>Máš plný inventář. Předmět čeká v <white>/ja claim</white>.'
+  not-active: '<prefix> <red>Tuto nabídku už nelze zrušit (prodána nebo pryč).'
+
+browse:
+  own-listing: '<prefix> <yellow>To je tvoje nabídka. Spravuj ji přes <white>/ja mylistings</white>.'
+
+claim:
+  empty: '<prefix> <gray>Nemáš nic k vyzvednutí.'
+  done: '<prefix> <green>Vyzvednuto předmětů: <white><count></white>.'
+  partial: '<prefix> <yellow>Vyzvednuto <white><count></white>. Dalších <white><remaining></white> se nevešlo; udělej místo a zadej <white>/ja claim</white> znovu.'
+  one: '<prefix> <green>Předmět vyzvednut.'
+  no-room: '<prefix> <red>V inventáři není dost místa.'
+
+claims:
+  join-notice: '<prefix> <yellow>Máš <white><count></white> předmětů k vyzvednutí: <white>/ja claim</white>'
+
+expired:
+  notice: '<prefix> <yellow>Počet tvých nabídek, kterým vypršel čas: <count>. Vyzvedni je přes <white>/ja claim</white>.'
+
+history:
+  empty: '<prefix> <gray>Zatím žádné prodeje ani nákupy.'
+  header: '<prefix> <gold>Tvoje poslední obchody:'
+  sold: '<dark_gray><time> <green>PRODÁNO <white><amount>x <item></white> hráči <white><other></white> za <gold><price></gold> (dostal jsi <earned>)'
+  bought: '<dark_gray><time> <aqua>KOUPENO <white><amount>x <item></white> od <white><other></white> za <gold><price></gold>'
+
+admin:
+  reloaded: '<prefix> <green>Konfigurace a zprávy načteny znovu. (Úložiště a aliasy vyžadují restart.)'
+  not-found: '<prefix> <red>Nabídka s id <id> neexistuje.'
+  not-active: '<prefix> <red>Nabídka <id> není aktivní (prodána, vypršela nebo se právě kupuje).'
+  removed: '<prefix> <green>Nabídka č. <id> hráče <seller> odstraněna. Předmět je v jeho úložišti k vyzvednutí.'
+  removed-notice: '<prefix> <yellow>Admin odstranil jednu z tvých nabídek. Předmět čeká v <white>/ja claim</white>.'
+
+update:
+  available: '<prefix> <yellow>Je dostupná verze JustAuction <white><version></white>: <aqua><url></aqua>'
+
+gui:
+  browse:
+    title: '<dark_gray>Aukční síň'
+  mine:
+    title: '<dark_gray>Moje nabídky'
+  claims:
+    title: '<dark_gray>K vyzvednutí'
+  confirm:
+    title: '<dark_gray>Potvrzení nákupu'
+  listing-lore:
+    - ''
+    - '<!italic><gray>Cena: <gold><price>'
+    - '<!italic><gray>Prodejce: <white><seller>'
+    - '<!italic><gray>Končí za: <white><time>'
+    - ''
+    - '<!italic><hint>'
+  claim-lore:
+    - ''
+    - '<!italic><gray>Důvod: <reason>'
+    - ''
+    - '<!italic><hint>'
+  hint:
+    buy: '<yellow>Klikni pro koupi'
+    own: '<aqua>Tvoje nabídka'
+    cancel: '<red>Klikni pro zrušení a vrácení'
+    claim: '<yellow>Klikni pro vyzvednutí'
+    confirm-item: '<gray>Zkontroluj předmět a cenu'
+  reason:
+    PURCHASE: '<green>Nákup'
+    EXPIRED: '<gold>Nabídce vypršel čas'
+    CANCELLED: '<yellow>Nabídka zrušena'
+    ADMIN_REMOVED: '<red>Odstraněno adminem'
+    RETURNED: '<yellow>Vráceno'
+  sort:
+    NEWEST: 'Nejnovější'
+    ENDING_SOON: 'Brzy končí'
+    PRICE_ASC: 'Cena: od nejnižší'
+    PRICE_DESC: 'Cena: od nejvyšší'
+  button:
+    prev: '<yellow>Předchozí strana'
+    prev-lore: []
+    next: '<yellow>Další strana'
+    next-lore: []
+    sort: '<gold>Řazení'
+    sort-lore:
+      - '<!italic><gray>Teď: <white><sort>'
+      - '<!italic><yellow>Klikni pro změnu'
+    mine: '<gold>Moje nabídky'
+    mine-lore:
+      - '<!italic><gray>Zobrazit a zrušit vlastní nabídky'
+    claims: '<gold>K vyzvednutí'
+    claims-lore:
+      - '<!italic><gray>Čeká: <white><count>'
+      - '<!italic><yellow>Klikni pro otevření'
+    page: '<white>Strana <page>/<pages> <gray>(nabídek: <total>)'
+    search: '<gold>Hledání'
+    search-lore:
+      - '<!italic><gray>Použij <white>/ja search <text></white>'
+    search-active: '<red>Hledání: <white><search>'
+    search-active-lore:
+      - '<!italic><yellow>Klikni pro zrušení hledání'
+    back: '<yellow>Zpět'
+    back-lore: []
+    confirm: '<green>Koupit'
+    confirm-lore:
+      - '<!italic><gray>Zaplatit <gold><price></gold> za <white><amount>x</white>'
+    cancel: '<red>Zrušit'
+    cancel-lore: []
+    collect-all: '<green>Vyzvednout vše'
+    collect-all-lore:
+      - '<!italic><gray>Čeká předmětů: <white><count>'

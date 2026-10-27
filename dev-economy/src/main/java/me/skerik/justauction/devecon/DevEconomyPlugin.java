@@ -1,8 +1,10 @@
 package me.skerik.justauction.devecon;
 
 import com.destroystokyo.paper.profile.PlayerProfile;
+import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.DoubleArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
+import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
@@ -15,6 +17,7 @@ import net.kyori.adventure.text.Component;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -26,8 +29,10 @@ public final class DevEconomyPlugin extends JavaPlugin {
     @Override
     public void onEnable() {
         Bukkit.getServicesManager().register(Economy.class, economy, this, ServicePriority.Highest);
-        getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS,
-                event -> event.registrar().register(buildCommand(), "DEV ONLY: fake economy"));
+        getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
+            event.registrar().register(buildCommand(), "DEV ONLY: fake economy");
+            event.registrar().register(buildPermCommand(), "DEV ONLY: grant a permission until the player quits");
+        });
         getComponentLogger().warn("DEV economy registered. Do NOT use on a production server.");
     }
 
@@ -85,6 +90,31 @@ public final class DevEconomyPlugin extends JavaPlugin {
                                     return 1;
                                 })))
                 .build();
+    }
+
+    /** /devperm &lt;player&gt; &lt;permission&gt; [true|false]: there is no permissions plugin on the test server. */
+    private LiteralCommandNode<CommandSourceStack> buildPermCommand() {
+        return Commands.literal("devperm")
+                .requires(src -> src.getSender().isOp())
+                .then(Commands.argument("player", ArgumentTypes.playerProfiles())
+                        .then(Commands.argument("permission", StringArgumentType.word())
+                                .executes(ctx -> grant(ctx.getSource(), ctx.getArgument("player", PlayerProfileListResolver.class),
+                                        StringArgumentType.getString(ctx, "permission"), true))
+                                .then(Commands.argument("value", BoolArgumentType.bool())
+                                        .executes(ctx -> grant(ctx.getSource(), ctx.getArgument("player", PlayerProfileListResolver.class),
+                                                StringArgumentType.getString(ctx, "permission"), BoolArgumentType.getBool(ctx, "value"))))))
+                .build();
+    }
+
+    private int grant(CommandSourceStack src, PlayerProfileListResolver resolver, String permission, boolean value)
+            throws CommandSyntaxException {
+        for (PlayerProfile profile : resolver.resolve(src)) {
+            Player p = Bukkit.getPlayer(profile.getId());
+            if (p == null) continue;
+            p.addAttachment(this, permission, value);
+            say(src, p.getName() + ": " + permission + "=" + value);
+        }
+        return 1;
     }
 
     private static Collection<OfflinePlayer> players(CommandSourceStack src, PlayerProfileListResolver resolver)

@@ -1,0 +1,79 @@
+# ============================================================================
+#  JustAuction configuration
+#  Reload most values with /ja reload. Storage and command aliases need a restart.
+# ============================================================================
+
+# Language of all player-facing messages: en, cs.
+# The files plugins/JustAuction/messages_<locale>.yml are yours to edit; missing keys fall back to the built-in text.
+locale: en
+
+# Check GitHub releases for a newer version (async, once at startup and then every 12 hours).
+# Players with justauction.admin are told when they join.
+update-check: true
+
+command:
+  # Extra aliases for /ja. Restart required. Remove an alias if another plugin already owns it.
+  aliases:
+    - auction
+    - ah
+
+storage:
+  # sqlite  = single file in the plugin folder, zero setup (default)
+  # mariadb = MariaDB or MySQL server (use this to share data between servers)
+  type: sqlite
+  sqlite:
+    file: justauction.db
+    # Concurrent database connections (writes are serialized by SQLite anyway)
+    pool-size: 3
+  mariadb:
+    host: localhost
+    port: 3306
+    database: justauction
+    user: justauction
+    password: change-me
+    pool-size: 6
+
+listing:
+  # How long a listing stays on sale.
+  duration-hours: 48
+  # Price limits, in your economy's currency (up to 2 decimals).
+  min-price: 1.00
+  max-price: 1000000000.00
+  # Percentage of the price the seller does NOT receive (the money is removed from the economy). 0 = off.
+  sales-fee-percent: 5
+  # Flat amount charged when creating a listing. Refunded if listing fails. 0 = off.
+  listing-fee: 0
+  # Expired / cancelled / unsold items wait in /ja claim for this many days, then they are deleted. 0 = keep forever.
+  claim-retention-days: 7
+  # Maximum simultaneous listings per player when no justauction.limit.<n> permission applies.
+  # Permission example: justauction.limit.20 (the highest value a player has wins).
+  default-max-listings: 5
+  blacklist:
+    # Items that cannot be listed (Bukkit material names).
+    materials:
+      - BEDROCK
+      - BARRIER
+      - LIGHT
+      - COMMAND_BLOCK
+      - CHAIN_COMMAND_BLOCK
+      - REPEATING_COMMAND_BLOCK
+      - COMMAND_BLOCK_MINECART
+      - STRUCTURE_BLOCK
+      - STRUCTURE_VOID
+      - JIGSAW
+      - DEBUG_STICK
+      - KNOWLEDGE_BOOK
+      - SPAWNER
+      - TRIAL_SPAWNER
+      - END_PORTAL_FRAME
+      - REINFORCED_DEEPSLATE
+    # Also reject containers (shulker boxes, bundles, ...) holding a blacklisted item.
+    check-container-contents: true
+
+gui:
+  # Minimum time between two clicks of the same player in a menu.
+  click-cooldown-ms: 250
+  # How often open menus reload their data from the database (20 ticks = 1 second).
+  refresh-ticks: 100
+  # Click / success / error sounds.
+  sounds: true

@@ -1,0 +1,149 @@
+# JustAuction messages (MiniMessage). Missing keys fall back to the built-in English text.
+# Placeholders in <angle brackets> are filled in by the plugin; keep them.
+prefix: '<dark_gray>[<gold>Auction<dark_gray>]<reset>'
+
+error:
+  not-ready: '<prefix> <red>The auction house is still starting up. Try again in a moment.'
+  players-only: '<prefix> <red>This command can only be used by players.'
+  no-permission: '<prefix> <red>You do not have permission to do that.'
+  generic: '<prefix> <red>Something went wrong. Nothing was lost; please try again or tell an admin.'
+
+time:
+  expired: 'expired'
+  days: '{n}d'
+  hours: '{n}h'
+  minutes: '{n}m'
+  seconds: '{n}s'
+
+sell:
+  invalid-price: '<prefix> <red>"<input>" is not a valid price. Example: <white>/ja sell 1500</white>, <white>2.5k</white> or <white>1.2m</white>.'
+  no-item: '<prefix> <red>Hold the item you want to sell in your main hand.'
+  blacklisted: '<prefix> <red>This item cannot be sold on the auction house (<material>).'
+  success: '<prefix> <green>Listed <white><amount>x <item></white> for <gold><price></gold> (listing #<id>). You receive <gold><net></gold> after the <percent>% fee. It stays up for <white><time></white>.'
+  price-too-low: '<prefix> <red>The minimum price is <gold><min></gold>.'
+  price-too-high: '<prefix> <red>The maximum price is <gold><max></gold>.'
+  limit-reached: '<prefix> <red>You already have the maximum of <white><limit></white> active listings.'
+  cannot-afford-fee: '<prefix> <red>You need <gold><fee></gold> to create a listing.'
+  item-gone: '<prefix> <red>The item left your hand before it could be listed. Nothing was charged.'
+  busy: '<prefix> <red>Your previous listing is still being processed.'
+  error: '<prefix> <red>The listing could not be saved. Your item and money were returned.'
+  sold: '<prefix> <green><buyer> bought <white><amount>x <item></white> for <gold><price></gold>. You received <gold><earned></gold> (fee <fee>).'
+
+buy:
+  success: '<prefix> <green>You bought <white><amount>x <item></white> for <gold><price></gold>.'
+  to-claim: '<prefix> <yellow>Your inventory is full. The item is waiting for you: <white>/ja claim</white>.'
+  not-available: '<prefix> <red>That listing is no longer available.'
+  own-listing: '<prefix> <red>You cannot buy your own listing.'
+  insufficient-funds: '<prefix> <red>You cannot afford <gold><price></gold>.'
+  payment-failed: '<prefix> <red>The payment failed. You were not charged.'
+  seller-payment-failed: '<prefix> <red>The seller could not be paid, so the purchase was cancelled. You were refunded.'
+  delayed: '<prefix> <yellow>Your payment went through, but finishing the purchase is delayed. The item will be delivered to <white>/ja claim</white> automatically; contact an admin if it does not arrive.'
+
+cancel:
+  success: '<prefix> <green>Listing cancelled: <white><amount>x <item></white> returned to you.'
+  to-claim: '<prefix> <yellow>Your inventory is full. The item is waiting in <white>/ja claim</white>.'
+  not-active: '<prefix> <red>That listing can no longer be cancelled (sold or already gone).'
+
+browse:
+  own-listing: '<prefix> <yellow>That is your listing. Manage it with <white>/ja mylistings</white>.'
+
+claim:
+  empty: '<prefix> <gray>You have nothing to claim.'
+  done: '<prefix> <green>Collected <white><count></white> item(s).'
+  partial: '<prefix> <yellow>Collected <white><count></white> item(s). <white><remaining></white> more did not fit; make room and run <white>/ja claim</white> again.'
+  one: '<prefix> <green>Item collected.'
+  no-room: '<prefix> <red>Not enough room in your inventory.'
+
+claims:
+  join-notice: '<prefix> <yellow>You have <white><count></white> item(s) to collect: <white>/ja claim</white>'
+
+expired:
+  notice: '<prefix> <yellow><count> of your listings expired. Collect the items with <white>/ja claim</white>.'
+
+history:
+  empty: '<prefix> <gray>No sales or purchases yet.'
+  header: '<prefix> <gold>Your last transactions:'
+  sold: '<dark_gray><time> <green>SOLD <white><amount>x <item></white> to <white><other></white> for <gold><price></gold> (you got <earned>)'
+  bought: '<dark_gray><time> <aqua>BOUGHT <white><amount>x <item></white> from <white><other></white> for <gold><price></gold>'
+
+admin:
+  reloaded: '<prefix> <green>Configuration and messages reloaded. (Storage settings and aliases need a restart.)'
+  not-found: '<prefix> <red>No listing with id <id>.'
+  not-active: '<prefix> <red>Listing <id> is not active (sold, expired, or being bought right now).'
+  removed: '<prefix> <green>Listing #<id> of <seller> removed. The item is in their claim storage.'
+  removed-notice: '<prefix> <yellow>An admin removed one of your listings. The item is waiting in <white>/ja claim</white>.'
+
+update:
+  available: '<prefix> <yellow>JustAuction <white><version></white> is available: <aqua><url></aqua>'
+
+gui:
+  browse:
+    title: '<dark_gray>Auction House'
+  mine:
+    title: '<dark_gray>My listings'
+  claims:
+    title: '<dark_gray>Items to claim'
+  confirm:
+    title: '<dark_gray>Confirm purchase'
+  listing-lore:
+    - ''
+    - '<!italic><gray>Price: <gold><price>'
+    - '<!italic><gray>Seller: <white><seller>'
+    - '<!italic><gray>Ends in: <white><time>'
+    - ''
+    - '<!italic><hint>'
+  claim-lore:
+    - ''
+    - '<!italic><gray>Reason: <reason>'
+    - ''
+    - '<!italic><hint>'
+  hint:
+    buy: '<yellow>Click to buy'
+    own: '<aqua>Your listing'
+    cancel: '<red>Click to cancel and take it back'
+    claim: '<yellow>Click to collect'
+    confirm-item: '<gray>Check the item and price'
+  reason:
+    PURCHASE: '<green>Purchase'
+    EXPIRED: '<gold>Listing expired'
+    CANCELLED: '<yellow>Listing cancelled'
+    ADMIN_REMOVED: '<red>Removed by an admin'
+    RETURNED: '<yellow>Returned'
+  sort:
+    NEWEST: 'Newest first'
+    ENDING_SOON: 'Ending soon'
+    PRICE_ASC: 'Price: low to high'
+    PRICE_DESC: 'Price: high to low'
+  button:
+    prev: '<yellow>Previous page'
+    prev-lore: []
+    next: '<yellow>Next page'
+    next-lore: []
+    sort: '<gold>Sort'
+    sort-lore:
+      - '<!italic><gray>Now: <white><sort>'
+      - '<!italic><yellow>Click to change'
+    mine: '<gold>My listings'
+    mine-lore:
+      - '<!italic><gray>See and cancel your own listings'
+    claims: '<gold>Items to claim'
+    claims-lore:
+      - '<!italic><gray>Waiting: <white><count>'
+      - '<!italic><yellow>Click to open'
+    page: '<white>Page <page>/<pages> <gray>(<total> listings)'
+    search: '<gold>Search'
+    search-lore:
+      - '<!italic><gray>Use <white>/ja search <text></white>'
+    search-active: '<red>Search: <white><search>'
+    search-active-lore:
+      - '<!italic><yellow>Click to clear the search'
+    back: '<yellow>Back'
+    back-lore: []
+    confirm: '<green>Buy'
+    confirm-lore:
+      - '<!italic><gray>Pay <gold><price></gold> for <white><amount>x</white>'
+    cancel: '<red>Cancel'
+    cancel-lore: []
+    collect-all: '<green>Collect all'
+    collect-all-lore:
+      - '<!italic><gray>Items waiting: <white><count>'
