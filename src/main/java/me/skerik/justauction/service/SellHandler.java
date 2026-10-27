@@ -103,6 +103,7 @@ public final class SellHandler {
 
     /** Highest justauction.limit.&lt;n&gt; the player has, else the configured default. */
     public static int maxListings(Context ctx, Player player) {
+        if (player.hasPermission("justauction.bypass.limit")) return 100_000;
         int best = ctx.settings().defaultMaxListings();
         boolean found = false;
         for (PermissionAttachmentInfo info : player.getEffectivePermissions()) {

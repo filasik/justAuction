@@ -19,6 +19,7 @@ import me.skerik.justauction.service.RecoveryLog;
 import me.skerik.justauction.storage.Database;
 import me.skerik.justauction.storage.Migrations;
 import me.skerik.justauction.storage.SqlListingStore;
+import me.skerik.justauction.util.Banner;
 import me.skerik.justauction.util.UpdateChecker;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -38,9 +39,12 @@ public final class JustAuctionPlugin extends JavaPlugin implements Listener {
     private Scheduler scheduler;
     private final java.util.List<Runnable> timers = new java.util.concurrent.CopyOnWriteArrayList<>();
     private volatile boolean shuttingDown;
+    private long enableStarted;
+    private int schemaVersion;
 
     @Override
     public void onEnable() {
+        enableStarted = System.nanoTime();
         saveDefaultConfig();
         settings = Settings.load(getConfig(), getLogger());
         messages = Messages.load(this, settings.locale());
@@ -61,8 +65,8 @@ public final class JustAuctionPlugin extends JavaPlugin implements Listener {
         try {
             Database db = new Database(settings.dbConfig(getDataFolder().toPath()));
             int version = Migrations.migrate(db);
-            getLogger().info("Database ready (" + settings.storageType() + ", schema v" + version + ")");
             database = db;
+            schemaVersion = version;
             scheduler.runGlobal(this::finishStartup);
         } catch (SQLException | RuntimeException e) {
             getLogger().log(Level.SEVERE, "Cannot open the database: " + e.getMessage()
@@ -88,7 +92,6 @@ public final class JustAuctionPlugin extends JavaPlugin implements Listener {
         var menus = new MenuManager(scheduler);
         var claims = new ClaimService(store, scheduler, getLogger());
         context = new Context(this, scheduler, service, economy, claims, menus, settings, messages);
-        getLogger().info("Using economy: " + VaultEconomyBridge.provider().getName());
 
         service.recoverStuck(0).whenComplete((actions, t) -> {
             if (t != null) getLogger().log(Level.SEVERE, "Startup recovery failed", t);
@@ -100,7 +103,12 @@ public final class JustAuctionPlugin extends JavaPlugin implements Listener {
             scheduler.runAsync(updater::check);
             timers.add(scheduler.runAsyncTimer(updater::check, 12L * 60 * 60 * 20, 12L * 60 * 60 * 20));
         }
-        getLogger().info("JustAuction " + getPluginMeta().getVersion() + " enabled");
+        String economyName = VaultEconomyBridge.provider().getName();
+        store.browse(null, null, me.skerik.justauction.model.Sort.NEWEST, System.currentTimeMillis(), 0, 1)
+                .whenComplete((page, t) -> Banner.print(getComponentLogger(), new Banner.Info(
+                        getPluginMeta().getVersion(), Bukkit.getMinecraftVersion(), economyName,
+                        settings.storageType().equals("sqlite") ? "SQLite" : "MariaDB", schemaVersion, settings.locale(),
+                        t == null ? page.total() : -1, (System.nanoTime() - enableStarted) / 1_000_000, settings.updateCheck())));
     }
 
     private void startTimers(AuctionService service, SqlListingStore store, MenuManager menus) {
@@ -183,6 +191,6 @@ public final class JustAuctionPlugin extends JavaPlugin implements Listener {
         if (ctx != null) ctx.menus.closeAll();
         context = null;
         if (database != null) database.close();
-        getLogger().info("JustAuction disabled");
+        getComponentLogger().info(net.kyori.adventure.text.Component.text("JustAuction disabled. Goodbye!", net.kyori.adventure.text.format.NamedTextColor.GRAY));
     }
 }

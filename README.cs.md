@@ -1,42 +1,44 @@
+<div align="center">
+
+<img src="assets/icon.svg" width="96" alt="JustAuction">
+
 # JustAuction
 
-Aukční síň pro servery na [Paperu](https://papermc.io). Hráči nabídnou předmět z ruky za pevnou cenu, ostatní si v GUI procházejí nabídky a kupují. Peníze jdou přes ekonomiku, kterou server už používá, a to přes [Vault](https://github.com/MilkBowl/Vault).
+**Bezpečná a rychlá aukční síň pro Paper.**
+Pevné ceny, přehledné GUI a nákupy, které nemohou zduplikovat předmět ani ztratit peníze.
 
-Hlavní důraz je na bezpečí: žádné duplikované předměty, žádné ztracené předměty ani peníze, a hlavní vlákno nikdy nečeká na databázi.
+[English](README.md) · Čeština
 
-## Požadavky
+</div>
 
-- Paper **26.3**, Java **25**
-- Vault nebo VaultUnlocked **a ekonomický plugin, který se u Vaultu registruje**
-- Při prvním spuštění internet (ovladače databáze se stahují z Maven Central)
-- **CMI:** vlastní ekonomika CMI se u Vaultu sama neregistruje, potřebuješ Vault most od CMI (CMI Injector). Bez Vault ekonomiky se JustAuction s jasnou hláškou vypne.
+---
 
-## Instalace
+## Co umí
 
-1. Nainstaluj Vault a ekonomický plugin.
-2. Dej `JustAuction-<verze>.jar` do `plugins/` a spusť server.
-3. Uprav `plugins/JustAuction/config.yml` a zadej `/ja reload`. Jazyk zpráv se mění v `locale: cs`.
+- Stavový automat nákupu: dva kupci nikdy nevyhrají současně
+- Všechna práce s databází běží asynchronně, server nikdy nečeká
+- Po pádu serveru se rozpracované nákupy dokončí nebo vrátí
+- Funguje s ekonomikou přes Vault (EssentialsX, CMI, ...)
+- SQLite hned po instalaci, MariaDB/MySQL volitelně
+- Všechny zprávy lze upravit (MiniMessage), v balíčku angličtina a čeština
+
+## Rychlý start
+
+1. Nainstaluj **Vault** (nebo VaultUnlocked) a ekonomický plugin.
+2. Dej `JustAuction-1.0.0.jar` do `plugins/` a spusť server. První start potřebuje internet (stažení ovladačů databáze).
+3. Drž předmět a zadej `/ja sell 500`. Ostatní otevřou trh příkazem `/ja`.
+4. Jazyk zpráv se mění v `config.yml`: `locale: cs`.
+
+**Požadavky:** Paper 26.3, Java 25, Vault ekonomika. U CMI musí být nainstalovaný jeho Vault most (CMI Injector), samotná ekonomika CMI se u Vaultu neregistruje.
 
 ## Příkazy
 
-`/ja` (aliasy `/auction` a `/ah`, jdou změnit v `command.aliases`, vyžaduje restart)
+`/ja` (aliasy `/auction` a `/ah` jdou změnit v `command.aliases`)
 
-| Příkaz | Popis |
-|---|---|
-| `/ja` | Otevře aukční síň |
-| `/ja sell <cena>` | Nabídne předmět z hlavní ruky (`1500`, `12.5`, `2k`, `1.5m`) |
-| `/ja mylistings` | Moje nabídky, zde je lze zrušit |
-| `/ja claim` | Vyzvedne předměty z úložiště (vypršelé, zrušené, nevešlé) |
-| `/ja search <text>` | Hledání podle názvu, materiálu nebo enchantu |
-| `/ja history` | Posledních 10 prodejů a nákupů |
-| `/ja reload`, `/ja admin remove <id>` | Pro adminy |
+`/ja sell <cena>` · `/ja mylistings` · `/ja claim` · `/ja search <text>` · `/ja history` · `/ja reload` · `/ja admin remove <id>`
 
-## Oprávnění
+Oprávnění: `justauction.use`, `justauction.sell` (všichni), `justauction.admin` (op), `justauction.limit.<n>` (max. počet nabídek), `justauction.bypass.limit`.
 
-`justauction.use`, `justauction.sell` (výchozí pro všechny), `justauction.admin` (op) a `justauction.limit.<n>` (max. počet nabídek, vyhrává nejvyšší hodnota).
+Folia zatím není podporována (pro 26.3 neexistuje build). MariaDB zatím není ověřená na živém serveru.
 
-## Úložiště a Folia
-
-SQLite je výchozí, MariaDB/MySQL je volitelná (zatím neověřená na živém serveru). Folia zatím není podporována, protože pro 26.3 neexistuje build.
-
-Licence MIT.
+Licence [MIT](LICENSE).

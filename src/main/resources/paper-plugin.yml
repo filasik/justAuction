@@ -20,6 +20,9 @@ permissions:
   justauction.sell:
     description: List items for sale
     default: true
+  justauction.bypass.limit:
+    description: Ignore the per-player listing limit
+    default: false
   justauction.admin:
     description: Reload, remove listings, update notifications
     default: op
