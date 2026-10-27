@@ -1,0 +1,3 @@
+org.xerial:sqlite-jdbc:${sqliteVersion}
+org.mariadb.jdbc:mariadb-java-client:${mariadbVersion}
+com.zaxxer:HikariCP:${hikariVersion}

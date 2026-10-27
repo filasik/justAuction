@@ -38,7 +38,14 @@ allprojects {
 dependencies {
     compileOnly("io.papermc.paper:paper-api:${property("paperApiVersion")}")
     compileOnly("com.github.MilkBowl:VaultAPI:1.7.1")
+    // Resolved at runtime by JustAuctionLoader (libraries.txt), not shaded
+    compileOnly("com.zaxxer:HikariCP:${property("hikariVersion")}")
 
+    testImplementation("io.papermc.paper:paper-api:${property("paperApiVersion")}")
+    testImplementation("com.github.MilkBowl:VaultAPI:1.7.1")
+    testImplementation("org.xerial:sqlite-jdbc:${property("sqliteVersion")}")
+    testImplementation("com.zaxxer:HikariCP:${property("hikariVersion")}")
+    testImplementation("org.slf4j:slf4j-simple:2.0.17")
     testImplementation(platform("org.junit:junit-bom:6.1.3"))
     testImplementation("org.junit.jupiter:junit-jupiter")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
@@ -46,12 +53,20 @@ dependencies {
 
 tasks.test {
     useJUnitPlatform()
+    jvmArgs("--enable-native-access=ALL-UNNAMED") // sqlite-jdbc loads a native library
+    testLogging { events("failed"); exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL }
 }
 
 tasks.processResources {
-    val props = mapOf("version" to project.version, "apiVersion" to project.property("apiVersion"))
+    val props = mapOf(
+        "version" to project.version,
+        "apiVersion" to project.property("apiVersion"),
+        "sqliteVersion" to project.property("sqliteVersion"),
+        "mariadbVersion" to project.property("mariadbVersion"),
+        "hikariVersion" to project.property("hikariVersion"),
+    )
     inputs.properties(props)
-    filesMatching("paper-plugin.yml") { expand(props) }
+    filesMatching(listOf("paper-plugin.yml", "libraries.txt")) { expand(props) }
 }
 
 tasks.runServer {
