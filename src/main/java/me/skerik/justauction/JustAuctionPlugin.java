@@ -11,10 +11,11 @@ import me.skerik.justauction.command.JaCommand;
 import me.skerik.justauction.config.ConfigUpdater;
 import me.skerik.justauction.config.Messages;
 import me.skerik.justauction.config.Settings;
-import me.skerik.justauction.economy.VaultEconomyBridge;
+import me.skerik.justauction.economy.EconomySelector;
 import me.skerik.justauction.gui.MenuListener;
 import me.skerik.justauction.gui.MenuManager;
 import me.skerik.justauction.notify.Settlements;
+import me.skerik.justauction.papi.PapiExpansion;
 import me.skerik.justauction.service.AuctionService;
 import me.skerik.justauction.service.ClaimService;
 import me.skerik.justauction.service.RecoveryLog;
@@ -22,6 +23,7 @@ import me.skerik.justauction.storage.Database;
 import me.skerik.justauction.storage.Migrations;
 import me.skerik.justauction.storage.SqlListingStore;
 import me.skerik.justauction.util.Banner;
+import me.skerik.justauction.util.Stats;
 import me.skerik.justauction.util.UpdateChecker;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -84,13 +86,14 @@ public final class JustAuctionPlugin extends JavaPlugin implements Listener {
     /** Runs on the first tick: every economy plugin has enabled by now. */
     private void finishStartup() {
         if (shuttingDown) return;
-        if (VaultEconomyBridge.provider() == null) {
+        var selected = EconomySelector.select(settings.economyBackend(), getName(), getLogger());
+        if (selected == null) {
             getLogger().severe("No Vault economy provider found. Install an economy plugin (EssentialsX, CMI, ...) "
                     + "together with Vault or VaultUnlocked. JustAuction is disabling itself.");
             Bukkit.getPluginManager().disablePlugin(this);
             return;
         }
-        var economy = new VaultEconomyBridge();
+        var economy = selected.bridge();
         var store = new SqlListingStore(database);
         var recovery = new RecoveryLog.File(getDataFolder().toPath().resolve("recovery"));
         var service = new AuctionService(store, economy, scheduler, recovery, getLogger(), System::currentTimeMillis,
@@ -110,10 +113,15 @@ public final class JustAuctionPlugin extends JavaPlugin implements Listener {
             scheduler.runAsync(updater::check);
             timers.add(scheduler.runAsyncTimer(updater::check, 12L * 60 * 60 * 20, 12L * 60 * 60 * 20));
         }
-        String economyName = VaultEconomyBridge.provider().getName();
+        String economyName = selected.providerName();
+        boolean stats = Stats.start(this, settings, economyName);
+        if (!stats) getLogger().fine("bStats not started (disabled in config.yml or no bStats id in this build)");
+        if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
+            if (new PapiExpansion(this).register()) getLogger().info("PlaceholderAPI expansion registered (%justauction_...%)");
+        }
         store.browse(null, null, me.skerik.justauction.model.Sort.NEWEST, System.currentTimeMillis(), 0, 1)
                 .whenComplete((page, t) -> Banner.print(getComponentLogger(), new Banner.Info(
-                        getPluginMeta().getVersion(), Bukkit.getMinecraftVersion(), economyName,
+                        getPluginMeta().getVersion(), Bukkit.getMinecraftVersion(), selected.api(), economyName,
                         settings.storageType().equals("sqlite") ? "SQLite" : "MariaDB", schemaVersion, settings.locale(),
                         t == null ? page.total() : -1, (System.nanoTime() - enableStarted) / 1_000_000, settings.updateCheck())));
     }

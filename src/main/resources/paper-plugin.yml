@@ -13,6 +13,10 @@ dependencies:
       load: BEFORE
       required: true
       join-classpath: true
+    PlaceholderAPI:
+      load: BEFORE
+      required: false
+      join-classpath: true
 permissions:
   justauction.use:
     description: Browse and buy on the auction house

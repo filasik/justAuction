@@ -1,6 +1,7 @@
 plugins {
     java
     id("xyz.jpenilla.run-paper") version "3.1.0"
+    id("com.gradleup.shadow") version "9.6.1"
 }
 
 allprojects {
@@ -13,6 +14,14 @@ allprojects {
         // Vault v1 API (net.milkbowl.vault.economy.Economy); works with Vault and VaultUnlocked
         maven("https://jitpack.io") {
             content { includeGroup("com.github.MilkBowl") }
+        }
+        // PlaceholderAPI (soft dependency, compile only)
+        maven("https://repo.extendedclip.com/releases/") {
+            content { includeGroup("me.clip") }
+        }
+        // VaultUnlocked v2 economy API (compile only)
+        maven("https://repo.codemc.org/repository/maven-public/") {
+            content { includeGroup("net.milkbowl.vault") }
         }
     }
 }
@@ -40,6 +49,10 @@ dependencies {
     compileOnly("com.github.MilkBowl:VaultAPI:1.7.1")
     // Resolved at runtime by JustAuctionLoader (libraries.txt), not shaded
     compileOnly("com.zaxxer:HikariCP:${property("hikariVersion")}")
+    compileOnly("me.clip:placeholderapi:${property("placeholderApiVersion")}")
+    compileOnly("net.milkbowl.vault:VaultUnlockedAPI:${property("vaultUnlockedApiVersion")}")
+    // The only library that is shaded (relocated, as bStats requires); everything else is resolved at runtime
+    implementation("org.bstats:bstats-bukkit:${property("bstatsVersion")}")
 
     testImplementation("io.papermc.paper:paper-api:${property("paperApiVersion")}")
     testImplementation("com.github.MilkBowl:VaultAPI:1.7.1")
@@ -64,9 +77,18 @@ tasks.processResources {
         "sqliteVersion" to project.property("sqliteVersion"),
         "mariadbVersion" to project.property("mariadbVersion"),
         "hikariVersion" to project.property("hikariVersion"),
+        "bstatsId" to project.property("bstatsId"),
     )
     inputs.properties(props)
-    filesMatching(listOf("paper-plugin.yml", "libraries.txt")) { expand(props) }
+    filesMatching(listOf("paper-plugin.yml", "libraries.txt", "build.properties")) { expand(props) }
+}
+
+// The shaded jar is the release artifact: same file name as before, plain jar task switched off
+tasks.jar { enabled = false }
+tasks.shadowJar {
+    archiveClassifier = ""
+    relocate("org.bstats", "me.skerik.justauction.libs.bstats")
+    exclude("META-INF/maven/**", "META-INF/*.md")
 }
 
 tasks.runServer {

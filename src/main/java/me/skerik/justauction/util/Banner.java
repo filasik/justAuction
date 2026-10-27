@@ -15,7 +15,7 @@ public final class Banner {
     private Banner() {
     }
 
-    public record Info(String version, String minecraft, String economy, String storage, int schema, String locale,
+    public record Info(String version, String minecraft, String economyApi, String economy, String storage, int schema, String locale,
                        int activeListings, long startupMs, boolean updateCheck) {
     }
 
@@ -23,6 +23,7 @@ public final class Banner {
         TagResolver r = TagResolver.resolver(
                 Placeholder.unparsed("version", i.version()),
                 Placeholder.unparsed("mc", i.minecraft()),
+                Placeholder.unparsed("api", i.economyApi()),
                 Placeholder.unparsed("economy", i.economy()),
                 Placeholder.unparsed("storage", i.storage()),
                 Placeholder.unparsed("schema", Integer.toString(i.schema())),
@@ -35,7 +36,7 @@ public final class Banner {
                 "",
                 "<dark_gray>  ┌─ <gold><bold>JustAuction</bold> <gray>v<version> <dark_gray>· <gray>Paper <mc>",
                 "<dark_gray>  │",
-                "<dark_gray>  │  <gray>Economy   <green>Vault <dark_gray>→ <white><economy>",
+                "<dark_gray>  │  <gray>Economy   <green><api> <dark_gray>→ <white><economy>",
                 "<dark_gray>  │  <gray>Storage   <aqua><storage> <dark_gray>(schema v<schema>)",
                 "<dark_gray>  │  <gray>Language  <white><locale>   <gray>Updates <white><updates>",
                 "<dark_gray>  │  <gray>Listings  <yellow><active> <gray>active",
