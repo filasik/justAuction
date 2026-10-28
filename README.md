@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="assets/icon.svg" width="112" alt="JustAuction">
+<img src="assets/banner.png" alt="JustAuction: a safe auction house for Paper">
 
 # JustAuction
 
@@ -157,6 +157,7 @@ Reserving is a single guarded database update, so a second buyer is turned away 
 
 ## Compatibility
 
+- **Spigot / Bukkit / Purpur forks:** Paper only (it uses `paper-plugin.yml`, Paper's plugin loader and Brigadier commands). Paper forks such as Purpur normally work but are not tested.
 - **Folia:** the code schedules through one abstraction, but Folia has no 26.3 build yet, so it is untested and disabled.
 - **MariaDB/MySQL:** tested against MySQL (unit tests and live server runs). MySQL 8+ with its default self-signed certificate needs `storage.mariadb.ssl-mode: trust`. A real MariaDB server is untested; SQLite remains the default.
 

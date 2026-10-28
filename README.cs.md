@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="assets/icon.svg" width="96" alt="JustAuction">
+<img src="assets/banner.png" alt="JustAuction: bezpečná aukční síň pro Paper">
 
 # JustAuction
 
