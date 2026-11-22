@@ -13,6 +13,10 @@ Pevné ceny, aukce s příhozy, přehledné GUI a nákupy, které nemohou zdupli
 
 ---
 
+<p align="center"><a href="https://skerik.me/plugin"><img src="assets/justfamily.png" width="128" alt="just plugins family"></a></p>
+
+> Součást sbírky **[just plugins family](https://skerik.me/plugin)**: plugin pro Paper z rodiny JustLogin, JustAuction, JustPolls, JustLogs a AI Friend. Všechny pluginy najdete na [skerik.me/plugin](https://skerik.me/plugin).
+
 ## Co umí
 
 - Časované aukce s příhozy, volitelným okamžitým nákupem a ochranou proti last-second příhozům
