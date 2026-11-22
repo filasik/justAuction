@@ -16,9 +16,9 @@ Fixed-price listings, timed auctions with bidding, a clean GUI, and sales that c
 
 ---
 
-<p align="center"><a href="https://skerik.me/plugin"><img src="assets/justfamily.png" width="128" alt="just plugins family"></a></p>
+<p align="center"><a href="https://skerik.me/plugins"><img src="assets/justfamily.png" width="128" alt="just plugins family"></a></p>
 
-> Part of the **[just plugins family](https://skerik.me/plugin)**: a collection of Paper plugins (JustLogin, JustAuction, JustPolls, JustLogs and AI Friend). Find them all at [skerik.me/plugin](https://skerik.me/plugin).
+> Part of the **[just plugins family](https://skerik.me/plugins)**: a collection of Paper plugins (JustLogin, JustAuction, JustPolls, JustLogs and AI Friend). Find them all at [skerik.me/plugins](https://skerik.me/plugins). Join us on [Discord](https://discord.gg/yh3H6g3kX7).
 
 ## Highlights
 
